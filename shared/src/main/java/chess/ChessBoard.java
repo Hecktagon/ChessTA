@@ -7,9 +7,10 @@ package chess;
  * signature of the existing methods.
  */
 public class ChessBoard {
-
+    ChessPiece[][] chessboard;
     public ChessBoard() {
-        
+//      NOTE: ChessBoard will be the only place in the entire code to use 0-7 indexing, everywhere else will be 1-8
+        chessboard = new ChessPiece[8][8];
     }
 
     /**
