@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -68,4 +69,34 @@ public class ChessPiece {
             case PAWN -> new CalculatorPawn();
         };
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece that = (ChessPiece) o;
+        return teamColor == that.teamColor && pieceType == that.pieceType;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(teamColor, pieceType);
+    }
+
+    @Override
+    public String toString() {
+        String pieceString = switch (pieceType) {
+            case KING -> "K";
+            case QUEEN -> "Q";
+            case ROOK -> "R";
+            case KNIGHT -> "N";
+            case BISHOP -> "B";
+            case PAWN -> "P";
+        };
+
+        return teamColor == ChessGame.TeamColor.WHITE ? pieceString : pieceString.toLowerCase();
+    }
+
+
 }
