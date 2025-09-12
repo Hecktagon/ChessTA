@@ -4,11 +4,19 @@ import java.util.Collection;
 
 public class CalculatorHelper {
 
-    // takes in a direction [x, y]/[col increment,row increment], and returns a ChessMove if move is possible
-    static ChessMove checkMove(int[] direction, ChessPosition myPos, ChessBoard board, ChessPiece.PieceType promo){
-        ChessMove move = null;
+    private boolean canTake(ChessPiece myPiece, ChessPiece targetPiece){
+
+    }
+
+    // takes in a direction [x, y]/[col increment,row increment], and returns all possible moves in that direction.
+    static ChessMove checkMove(int[] direction, int numMoves, ChessPosition myPos, ChessBoard board, ChessPiece.PieceType promo){
+        if (numMoves > 2){
+            numMoves = 8;
+        }
+
         int myCol = myPos.getColumn();
         int myRow = myPos.getRow();
+        ChessPiece myPiece;
 
         int newCol = myCol + direction[0];
         int newRow = myRow + direction[1];
@@ -20,9 +28,11 @@ public class CalculatorHelper {
         if (targetPiece == null){
             return new ChessMove(myPos, newPos, promo);
         } else {
-
+            myPiece = board.getPiece(myPos);
+            return (canTake(myPiece, targetPiece)) ? new ChessMove(myPos, newPos, promo) : null;
         }
 
-        return move;
     }
+
+
 }
