@@ -26,7 +26,8 @@ public class CalculatorHelper {
     }
 
     // takes in a direction [x, y]/[col increment,row increment], and returns all possible moves in that direction.
-    public static Collection<ChessMove> checkDirection(int[] direction, int numMoves, ChessPosition myPos, ChessBoard board, boolean promotes, boolean takes){
+    public static Collection<ChessMove> checkDirection(int[] direction, int numMoves, ChessPosition myPos,
+                                                       ChessBoard board, boolean promotes, boolean takes){
         if (numMoves > 2){
             numMoves = 8;
         }
