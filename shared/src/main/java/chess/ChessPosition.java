@@ -13,8 +13,8 @@ public class ChessPosition {
     private final int col;
 
     public ChessPosition(int rowNum, int colNum) {
-        row = rowNum - 1;
-        col = colNum - 1;
+        row = rowNum;
+        col = colNum;
     }
 
     /**
@@ -45,5 +45,21 @@ public class ChessPosition {
     @Override
     public int hashCode() {
         return Objects.hash(row, col);
+    }
+
+    @Override
+    public String toString() {
+        char colLetter = switch (col) {
+            case 1 -> 'a';
+            case 2 -> 'b';
+            case 3 -> 'c';
+            case 4 -> 'd';
+            case 5 -> 'e';
+            case 6 -> 'f';
+            case 7 -> 'g';
+            case 8 -> 'h';
+            default -> 'z';
+        };
+        return colLetter + Integer.toString(row);
     }
 }

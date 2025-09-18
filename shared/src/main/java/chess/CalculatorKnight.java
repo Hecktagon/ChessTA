@@ -8,16 +8,21 @@ public class CalculatorKnight implements MovesCalculator{
         HashSet<ChessMove> moves = new HashSet<>();
 
         int[][] directions = {
-                {1,0},
-                {-1,0},
-                {0,-1},
-                {0,1}
+                {2,1},
+                {2,-1},
+                {-2,1},
+                {-2,-1},
+                {1,2},
+                {1,-2},
+                {-1,2},
+                {-1,-2}
         };
 
         for(int[] direction : directions) {
-            moves.addAll(CalculatorHelper.checkDirection(direction, 8,
+            moves.addAll(CalculatorHelper.checkDirection(direction, 1,
                     chessPosition, chessBoard, false, true));
         }
         return moves;
     }
 }
+

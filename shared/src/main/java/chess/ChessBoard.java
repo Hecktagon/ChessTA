@@ -23,8 +23,8 @@ public class ChessBoard {
      * @param piece    the piece to add
      */
     public void addPiece(ChessPosition position, ChessPiece piece) {
-        int row = position.getRow();
-        int col = position.getColumn();
+        int row = position.getRow() -1;
+        int col = position.getColumn() -1;
         chessBoard[row][col] = piece;
     }
 
@@ -36,9 +36,9 @@ public class ChessBoard {
      * position
      */
     public ChessPiece getPiece(ChessPosition position) {
-        int row = position.getRow();
-        int col = position.getColumn();
-        return chessBoard[col][row];
+        int row = position.getRow() -1;
+        int col = position.getColumn() -1;
+        return chessBoard[row][col];
     }
 
     /**
@@ -91,7 +91,7 @@ public class ChessBoard {
         StringBuilder chessBoardStr = new StringBuilder();
         for (int y = 7; y >= 0; y--){
             for (int x = 0; x < 8; x++){
-                ChessPosition currPos = new ChessPosition(x + 1 , y + 1);
+                ChessPosition currPos = new ChessPosition(y + 1 , x + 1);
                 ChessPiece currPiece = getPiece(currPos);
                 chessBoardStr.append("|");
                 chessBoardStr.append(currPiece == null ? " " : currPiece.toString());

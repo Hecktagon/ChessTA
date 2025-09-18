@@ -57,4 +57,10 @@ public class ChessMove {
     public ChessPiece.PieceType getPromotionPiece() {
         return promotionPiece;
     }
+
+    @Override
+    public String toString() {
+        String promoStr = promotionPiece == null ? "" : promotionPiece.toString();
+        return startPosition.toString() + "->" + endPosition.toString() + promoStr;
+    }
 }

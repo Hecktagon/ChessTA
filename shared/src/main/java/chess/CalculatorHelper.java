@@ -9,6 +9,10 @@ public class CalculatorHelper {
         return !myPiece.getTeamColor().equals(targetPiece.getTeamColor());
     }
 
+    private static boolean inBounds(int row, int col){
+        return row <= 8 && row > 0 && col <= 8 && col > 0;
+    }
+
     // generates all the promotion moves for a promoting pawn
     private static Collection<ChessMove> promoMoves(ChessPosition startPos, ChessPosition endPos){
         HashSet<ChessMove> promotions = new HashSet<>();
@@ -28,10 +32,17 @@ public class CalculatorHelper {
         int myRow = myPos.getRow();
         ChessPiece myPiece;
 
-        int newCol = myCol + direction[0];
-        int newRow = myRow + direction[1];
+        int newCol = myCol;
+        int newRow = myRow;
 
         for(int i = 0; i < numMoves; i++){
+            newCol += direction[0];
+            newRow += direction[1];
+
+            if(!inBounds(newRow, newCol)){
+                break;
+            }
+
             ChessPosition newPos = new ChessPosition(newRow, newCol);
             ChessPiece targetPiece = board.getPiece(newPos);
 
