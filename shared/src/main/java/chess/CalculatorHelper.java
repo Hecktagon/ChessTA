@@ -9,14 +9,17 @@ public class CalculatorHelper {
         return !myPiece.getTeamColor().equals(targetPiece.getTeamColor());
     }
 
-    private static boolean inBounds(int row, int col){
-        return row <= 8 && row > 0 && col <= 8 && col > 0;
+    public static boolean inBounds(ChessPosition myPos){
+        return myPos.getRow() <= 8 && myPos.getRow() > 0 && myPos.getColumn() <= 8 && myPos.getColumn() > 0;
     }
 
     // generates all the promotion moves for a promoting pawn
     private static Collection<ChessMove> promoMoves(ChessPosition startPos, ChessPosition endPos){
         HashSet<ChessMove> promotions = new HashSet<>();
-        for(ChessPiece.PieceType type : ChessPiece.PieceType.values()){
+        ChessPiece.PieceType[] promoTypes = {ChessPiece.PieceType.QUEEN, ChessPiece.PieceType.BISHOP,
+                ChessPiece.PieceType.KNIGHT, ChessPiece.PieceType.ROOK};
+
+        for(ChessPiece.PieceType type : promoTypes){
             promotions.add(new ChessMove(startPos, endPos, type));
         }
         return promotions;
@@ -39,11 +42,10 @@ public class CalculatorHelper {
             newCol += direction[0];
             newRow += direction[1];
 
-            if(!inBounds(newRow, newCol)){
+            ChessPosition newPos = new ChessPosition(newRow, newCol);
+            if(!inBounds(newPos)){
                 break;
             }
-
-            ChessPosition newPos = new ChessPosition(newRow, newCol);
             ChessPiece targetPiece = board.getPiece(newPos);
 
             // for pawn moves, allows the adding of all promotional moves if needed.
