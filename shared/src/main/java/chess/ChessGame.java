@@ -102,6 +102,7 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
+        // have to be in check to be in checkmate
         if(!isInCheck(teamColor)){
             return false;
         }
@@ -110,7 +111,16 @@ public class ChessGame {
         TeamColor enemyTeam = getEnemyTeam(teamColor);
         Collection<ChessPosition> dangerSpaces = attackedSpaces(enemyTeam);
 
-
+        ChessPiece myKing = chessBoard.getPiece(kingPos);
+        Collection<ChessMove> kingMoves = myKing.pieceMoves(chessBoard, kingPos);
+        for (ChessMove kingMove : kingMoves){
+            // if there is a safe move the king can make, then it isn't checkmate.
+            if(!dangerSpaces.contains(kingMove.getEndPosition())){
+                 return false;
+            }
+        }
+        // if no safe moves were found, it is checkmate
+        return true;
     }
 
     /**
@@ -121,9 +131,12 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
+        // can't be in check if you are in stalemate
         if(isInCheck(teamColor)){
             return false;
         }
+
+        // all pieces have to be unable to move for stalemate
     }
 
     /**
