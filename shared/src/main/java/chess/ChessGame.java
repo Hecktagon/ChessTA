@@ -55,9 +55,9 @@ public class ChessGame {
 
 
 
-
         return moves;
     }
+
 
     /**
      * Makes a move in a chess game
@@ -71,7 +71,7 @@ public class ChessGame {
 
         // Error if move is invalid
         if(!valids.contains(move)){
-            throw new InvalidMoveException(move.toString() + " is not a valid move.");
+            throw new InvalidMoveException(move + " is not a valid move.");
         }
 
         ChessPosition newPos = move.getEndPosition();
@@ -82,6 +82,7 @@ public class ChessGame {
         chessBoard.addPiece(newPos, myPiece);
     }
 
+
     /**
      * Determines if the given team is in check
      *
@@ -91,9 +92,10 @@ public class ChessGame {
     public boolean isInCheck(TeamColor teamColor) {
         ChessPosition kingPos = findKing(teamColor);
         TeamColor enemyTeam = getEnemyTeam(teamColor);
-        Collection<ChessPosition> dangerSpaces = attackedSpaces(enemyTeam);
+        Collection<ChessPosition> dangerSpaces = getEndPositions(teamMoves(enemyTeam));
         return dangerSpaces.contains(kingPos);
     }
+
 
     /**
      * Determines if the given team is in checkmate
@@ -109,19 +111,9 @@ public class ChessGame {
 
         ChessPosition kingPos = findKing(teamColor);
         TeamColor enemyTeam = getEnemyTeam(teamColor);
-        Collection<ChessPosition> dangerSpaces = attackedSpaces(enemyTeam);
 
-        ChessPiece myKing = chessBoard.getPiece(kingPos);
-        Collection<ChessMove> kingMoves = myKing.pieceMoves(chessBoard, kingPos);
-        for (ChessMove kingMove : kingMoves){
-            // if there is a safe move the king can make, then it isn't checkmate.
-            if(!dangerSpaces.contains(kingMove.getEndPosition())){
-                 return false;
-            }
-        }
-        // if no safe moves were found, it is checkmate
-        return true;
     }
+
 
     /**
      * Determines if the given team is in stalemate, which here is defined as having
@@ -138,6 +130,7 @@ public class ChessGame {
 
         // all pieces have to be unable to move for stalemate
     }
+
 
     /**
      * Sets this game's chessboard with a given board
@@ -157,6 +150,7 @@ public class ChessGame {
         return chessBoard;
     }
 
+
     private Collection<ChessPosition> getEndPositions(Collection<ChessMove> moves){
         HashSet<ChessPosition> endPoses = new HashSet<>();
         for(ChessMove move : moves){
@@ -165,19 +159,21 @@ public class ChessGame {
         return endPoses;
     }
 
-    private Collection<ChessPosition> attackedSpaces(TeamColor teamColor){
-        HashSet<ChessPosition> dangerSpaces =  new HashSet<>();
+
+    private Collection<ChessMove> teamMoves(TeamColor teamColor){
+        HashSet<ChessMove> moves =  new HashSet<>();
         for(int row = 1; row < 9; row++){
            for(int col = 1; col < 9; col++){
                ChessPosition curPos = new ChessPosition(row, col);
                ChessPiece curPiece = chessBoard.getPiece(curPos);
                if(curPiece != null && curPiece.getTeamColor() == teamColor){
-                   dangerSpaces.addAll(getEndPositions(curPiece.pieceMoves(chessBoard, curPos)));
+                   moves.addAll(curPiece.pieceMoves(chessBoard, curPos));
                }
            }
         }
-        return dangerSpaces;
+        return moves;
     }
+
 
     private ChessPosition findKing(TeamColor kingColor) {
         for (int row = 1; row < 9; row++) {
@@ -195,7 +191,7 @@ public class ChessGame {
     }
 
 
-    private boolean tryMove(ChessMove move){
+    private boolean tryMove(ChessMove move, boolean executeMove){
         ChessPosition startPos = move.getStartPosition();
         ChessPosition endPos = move.getEndPosition();
         ChessPiece myPiece = chessBoard.getPiece(startPos);
@@ -206,14 +202,15 @@ public class ChessGame {
         chessBoard.addPiece(endPos, myPiece);
         boolean canMove = !isInCheck(myTeam);
 
-        // if the move is invalid, undo it
-        if(!canMove){
+        // if the move is invalid, or if this is just a test, undo it
+        if(!canMove || !executeMove){
             chessBoard.addPiece(endPos, targetPiece);
             chessBoard.addPiece(startPos, myPiece);
         }
 
         return canMove;
     }
+
 
     private TeamColor getEnemyTeam(TeamColor myTeam){
         return myTeam == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE;
