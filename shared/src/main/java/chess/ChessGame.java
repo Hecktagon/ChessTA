@@ -51,6 +51,10 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece myPiece = chessBoard.getPiece(startPosition);
+        if(myPiece == null){
+            return null;
+        }
+
         Collection<ChessMove> moves = myPiece.pieceMoves(chessBoard, startPosition);
 
         for(ChessMove move : moves){
@@ -59,7 +63,6 @@ public class ChessGame {
                 moves.remove(move);
             }
         }
-
         return moves;
     }
 

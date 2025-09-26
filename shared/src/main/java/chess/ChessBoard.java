@@ -99,6 +99,6 @@ public class ChessBoard {
             chessBoardStr.append("|");
             chessBoardStr.append("\n");
         }
-        return chessBoardStr.toString();
+        return "\n" + chessBoardStr.toString() + "\n";
     }
 }
