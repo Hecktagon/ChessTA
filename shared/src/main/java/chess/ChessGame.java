@@ -171,8 +171,25 @@ public class ChessGame {
         return null;
     }
 
-    private boolean testMove(ChessMove move){
 
+    private boolean tryMove(ChessMove move, ChessBoard board){
+        ChessPosition startPos = move.getStartPosition();
+        ChessPosition endPos = move.getEndPosition();
+        ChessPiece myPiece = board.getPiece(startPos);
+        TeamColor myTeam = myPiece.getTeamColor();
+        ChessPiece targetPiece = board.getPiece(endPos);
+
+        // make the move, then check if it puts your king in danger
+        board.addPiece(endPos, myPiece);
+        boolean canMove = !isInCheck(myTeam);
+
+        // if the move is invalid, undo it
+        if(!canMove){
+            board.addPiece(endPos, targetPiece);
+            board.addPiece(startPos, myPiece);
+        }
+
+        return canMove;
     }
 
 }
