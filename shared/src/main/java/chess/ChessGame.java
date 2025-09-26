@@ -53,7 +53,12 @@ public class ChessGame {
         ChessPiece myPiece = chessBoard.getPiece(startPosition);
         Collection<ChessMove> moves = myPiece.pieceMoves(chessBoard, startPosition);
 
-
+        for(ChessMove move : moves){
+            // if the move puts king in danger, remove it
+            if(!tryMove(move)){
+                moves.remove(move);
+            }
+        }
 
         return moves;
     }
