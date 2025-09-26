@@ -109,9 +109,8 @@ public class ChessGame {
             return false;
         }
 
-        ChessPosition kingPos = findKing(teamColor);
-        TeamColor enemyTeam = getEnemyTeam(teamColor);
-
+        // if you have no moves and are in check, it is checkmate
+        return teamCantMove(teamColor);
     }
 
 
@@ -128,7 +127,8 @@ public class ChessGame {
             return false;
         }
 
-        // all pieces have to be unable to move for stalemate
+        // if you have no moves and aren't in check, it is stalemate
+        return teamCantMove(teamColor);
     }
 
 
@@ -191,7 +191,7 @@ public class ChessGame {
     }
 
 
-    private boolean tryMove(ChessMove move, boolean executeMove){
+    private boolean tryMove(ChessMove move){
         ChessPosition startPos = move.getStartPosition();
         ChessPosition endPos = move.getEndPosition();
         ChessPiece myPiece = chessBoard.getPiece(startPos);
@@ -202,11 +202,9 @@ public class ChessGame {
         chessBoard.addPiece(endPos, myPiece);
         boolean canMove = !isInCheck(myTeam);
 
-        // if the move is invalid, or if this is just a test, undo it
-        if(!canMove || !executeMove){
-            chessBoard.addPiece(endPos, targetPiece);
-            chessBoard.addPiece(startPos, myPiece);
-        }
+        // undo the move
+        chessBoard.addPiece(endPos, targetPiece);
+        chessBoard.addPiece(startPos, myPiece);
 
         return canMove;
     }
@@ -216,4 +214,15 @@ public class ChessGame {
         return myTeam == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE;
     }
 
+    private boolean teamCantMove(TeamColor team){
+        // if any move succeeds, return false
+        Collection<ChessMove> myTeamMoves = teamMoves(team);
+        for(ChessMove move : myTeamMoves){
+            if(tryMove(move)){
+                return false;
+            }
+        }
+        // if all moves fail return true
+        return true;
+    }
 }
