@@ -54,7 +54,7 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         MovesCalculator calculator = calculatorTyper(board, myPosition);
-        System.out.print(board.toString());
+//        System.out.print(board.toString());
         return calculator.pieceMoves(board, myPosition);
     }
 

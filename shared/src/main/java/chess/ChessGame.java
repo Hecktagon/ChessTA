@@ -2,6 +2,7 @@ package chess;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -52,18 +53,19 @@ public class ChessGame {
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece myPiece = chessBoard.getPiece(startPosition);
         if(myPiece == null){
-            return null;
+            return new HashSet<>();
         }
 
         Collection<ChessMove> moves = myPiece.pieceMoves(chessBoard, startPosition);
+        Collection<ChessMove> valids = new HashSet<>();
 
         for(ChessMove move : moves){
             // if the move puts king in danger, remove it
-            if(!tryMove(move)){
-                moves.remove(move);
+            if(tryMove(move)){
+                valids.add(move);
             }
         }
-        return moves;
+        return valids;
     }
 
 
@@ -76,18 +78,24 @@ public class ChessGame {
     public void makeMove(ChessMove move) throws InvalidMoveException {
         ChessPosition myPos = move.getStartPosition();
         Collection<ChessMove> valids = validMoves(myPos);
+        ChessPiece myPiece =  chessBoard.getPiece(myPos);
 
         // Error if move is invalid
-        if(!valids.contains(move)){
+        if(!valids.contains(move) || myPiece.getTeamColor() != currentTeam){
             throw new InvalidMoveException(move + " is not a valid move.");
         }
 
         ChessPosition newPos = move.getEndPosition();
 
         // Execute the move
-        ChessPiece myPiece =  chessBoard.getPiece(myPos);
         chessBoard.addPiece(myPos, null);
-        chessBoard.addPiece(newPos, myPiece);
+        if (move.getPromotionPiece() == null){
+            chessBoard.addPiece(newPos, myPiece);
+        } else {
+            chessBoard.addPiece(newPos, new ChessPiece(myPiece.getTeamColor(), move.getPromotionPiece()));
+        }
+
+        currentTeam = currentTeam == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE;
     }
 
 
@@ -134,7 +142,7 @@ public class ChessGame {
         if(isInCheck(teamColor)){
             return false;
         }
-
+        System.out.print(chessBoard);
         // if you have no moves and aren't in check, it is stalemate
         return teamCantMove(teamColor);
     }
@@ -232,5 +240,19 @@ public class ChessGame {
         }
         // if all moves fail return true
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessGame chessGame = (ChessGame) o;
+        return Objects.equals(chessBoard, chessGame.chessBoard) && currentTeam == chessGame.currentTeam;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(chessBoard, currentTeam);
     }
 }
