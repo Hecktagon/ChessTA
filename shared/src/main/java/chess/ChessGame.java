@@ -216,6 +216,7 @@ public class ChessGame {
 
         // make the move, then check if it puts your king in danger
         chessBoard.addPiece(endPos, myPiece);
+        chessBoard.addPiece(startPos, null);
         boolean canMove = !isInCheck(myTeam);
 
         // undo the move
