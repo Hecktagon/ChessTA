@@ -13,10 +13,6 @@ public class Service {
     GameDAO gameDAO;
     UserDAO userDAO;
 
-    private String generateToken(){
-        return UUID.randomUUID().toString();
-    }
-
     public Service(AuthDAO authDataAccess, UserDAO userDataAccess, GameDAO gameDataAccess){
         authDAO = authDataAccess;
         gameDAO = gameDataAccess;
@@ -35,5 +31,9 @@ public class Service {
         authDAO.createAuth(authData);
 
         return authData;
+    }
+
+    private String generateToken(){
+        return UUID.randomUUID().toString();
     }
 }
