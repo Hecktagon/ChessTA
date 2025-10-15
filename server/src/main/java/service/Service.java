@@ -15,8 +15,8 @@ public class Service {
 
     public Service(AuthDAO authDataAccess, UserDAO userDataAccess, GameDAO gameDataAccess){
         authDAO = authDataAccess;
-        gameDAO = gameDataAccess;
         userDAO = userDataAccess;
+        gameDAO = gameDataAccess;
     }
 
     public AuthData register(UserData registerRequest) throws ResponseException {
@@ -28,6 +28,18 @@ public class Service {
         userDAO.createUser(registerRequest);
 
         AuthData authData = new AuthData(generateToken(), registerRequest.username());
+        authDAO.createAuth(authData);
+
+        return authData;
+    }
+
+    public AuthData login(UserData loginRequest) throws ResponseException {
+        boolean noSuchUser = userDAO.getUser(loginRequest.username()) == null;
+        if (noSuchUser){
+            throw new ResponseException("No such user", ResponseException.Type.UNAUTHORIZED);
+        }
+
+        AuthData authData = new AuthData(generateToken(), loginRequest.username());
         authDAO.createAuth(authData);
 
         return authData;

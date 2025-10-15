@@ -3,11 +3,10 @@ package errors;
 // a class for handling 400 errors
 
 public class ResponseException extends Exception {
-    Type type;
+    Type type = Type.DATA_ACCESS_ERROR;
 
     public ResponseException(String message) {
         super(message);
-        type = Type.UNAUTHORIZED;
     }
 
     public ResponseException(String message, Type exceptionType) {
