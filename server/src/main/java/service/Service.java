@@ -19,10 +19,11 @@ public class Service {
         gameDAO = gameDataAccess;
     }
 
+
     public AuthData register(UserData registerRequest) throws ResponseException {
         boolean userTaken = userDAO.getUser(registerRequest.username()) != null;
         if (userTaken){
-            throw new ResponseException("Username already taken", ResponseException.Type.ALREADY_TAKEN);
+            throw new ResponseException(ResponseException.Type.ALREADY_TAKEN);
         }
 
         userDAO.createUser(registerRequest);
@@ -33,16 +34,26 @@ public class Service {
         return authData;
     }
 
+
     public AuthData login(UserData loginRequest) throws ResponseException {
         boolean noSuchUser = userDAO.getUser(loginRequest.username()) == null;
         if (noSuchUser){
-            throw new ResponseException("No such user", ResponseException.Type.UNAUTHORIZED);
+            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
         }
 
         AuthData authData = new AuthData(generateToken(), loginRequest.username());
         authDAO.createAuth(authData);
 
         return authData;
+    }
+
+
+    public void logout(String authToken) throws ResponseException {
+        if (authDAO.getAuth(authToken) == null){
+            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
+        }
+
+        authDAO.deleteAuth(authToken);
     }
 
     private String generateToken(){
