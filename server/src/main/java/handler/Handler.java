@@ -19,13 +19,23 @@ public class Handler {
 
     public void handleRegister(Context ctx) throws ResponseException{
         UserData userData = new Gson().fromJson(ctx.body(), UserData.class);
-        if(userData.username() == null || userData.password() == null || userData.email() == null){
-            throw new ResponseException(ResponseException.Type.BAD_REQUEST);
-        }
-
+        nullDataCheck(userData.username(), userData.password(), userData.email());
         AuthData authData = service.register(userData);
         ctx.json(new Gson().toJson(authData));
     }
+
+    public void handleLogin(Context ctx) throws ResponseException{
+        UserData userData = new Gson().fromJson(ctx.body(), UserData.class);
+        nullDataCheck(userData.username(), userData.password());
+        AuthData authData = service.login(userData);
+        ctx.json(new Gson().toJson(authData));
+    }
+
+    public void handleLogout(Context ctx) throws ResponseException {
+        String authToken = ctx.header("authorization");
+        service.logout(authToken);
+    }
+
 
 
     public void handleClear(Context ctx) throws ResponseException{
@@ -45,5 +55,13 @@ public class Handler {
             case ALREADY_TAKEN -> 403;
             case DATA_ACCESS_ERROR -> 500;
         };
+    }
+
+    private void nullDataCheck(Object... args) throws ResponseException {
+        for(Object arg : args){
+            if (arg == null){
+                throw new ResponseException(ResponseException.Type.BAD_REQUEST);
+            }
+        }
     }
 }

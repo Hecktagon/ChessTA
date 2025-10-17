@@ -1,8 +1,7 @@
 package service;
 
 import dataaccess.*;
-import dataobjects.AuthData;
-import dataobjects.UserData;
+import dataobjects.*;
 import errors.ResponseException;
 import java.util.UUID;
 
@@ -34,8 +33,8 @@ public class Service {
 
 
     public AuthData login(UserData loginRequest) throws ResponseException {
-        boolean noSuchUser = userDAO.getUser(loginRequest.username()) == null;
-        if (noSuchUser){
+        UserData userData = userDAO.getUser(loginRequest.username());
+        if (userData == null || !userData.password().equals(loginRequest.password())){
             throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
         }
 
