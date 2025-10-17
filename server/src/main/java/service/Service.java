@@ -54,6 +54,12 @@ public class Service {
         authDAO.deleteAuth(authToken);
     }
 
+    public void clearAll() throws ResponseException {
+        authDAO.clearAuths();
+        gameDAO.clearGames();
+        userDAO.clearUsers();
+    }
+
     private String generateToken(){
         return UUID.randomUUID().toString();
     }

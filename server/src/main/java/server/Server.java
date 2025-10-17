@@ -1,5 +1,6 @@
 package server;
 
+import errors.ResponseException;
 import handler.Handler;
 import io.javalin.*;
 
@@ -11,7 +12,10 @@ public class Server {
     public Server() {
         handler = new Handler();
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
-                .post("/user", handler::handleRegister);
+                .post("/user", handler::handleRegister)
+                .post("/session", handler::handleLogin)
+                .delete("/db", handler::handleClear)
+                .exception(ResponseException.class, handler::handleException);
 
         // Register your endpoints and exception handlers here.
 
