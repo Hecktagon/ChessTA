@@ -3,17 +3,18 @@ package errors;
 // a class for handling 400 errors
 
 public class ResponseException extends Exception {
-    Type type = Type.DATA_ACCESS_ERROR;
-    String message;
+    private Type type = Type.DATA_ACCESS_ERROR;
+    private final String message;
 
     public ResponseException() {
         message = typeToMessage();
     }
 
     public ResponseException(Type exceptionType) {
-        message = typeToMessage();
         type = exceptionType;
+        message = typeToMessage();
     }
+
 
     public enum Type {
         UNAUTHORIZED,
@@ -22,12 +23,18 @@ public class ResponseException extends Exception {
         DATA_ACCESS_ERROR;
     }
 
-    public String typeToMessage() {
+
+    private String typeToMessage() {
         return switch (type){
             case UNAUTHORIZED -> "Unauthorized";
             case BAD_REQUEST -> "Bad request";
             case ALREADY_TAKEN -> "Already taken";
             case DATA_ACCESS_ERROR -> "Data access error";
         };
+    }
+
+
+    public Type getType() {
+        return type;
     }
 }

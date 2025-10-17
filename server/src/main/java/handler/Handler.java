@@ -1,22 +1,25 @@
 package handler;
 
+import com.google.gson.Gson;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
+import errors.ResponseException;
+import io.javalin.http.Context;
 import service.Service;
+import dataobjects.*;
 
 public class Handler {
-    AuthDAO authDAO;
-    GameDAO gameDAO;
-    UserDAO userDAO;
 
     Service service;
 
-    public Handler(AuthDAO authDataAccess, UserDAO userDataAccess, GameDAO gameDataAccess){
-        authDAO = authDataAccess;
-        userDAO = userDataAccess;
-        gameDAO = gameDataAccess;
+    public Handler(){
+        service = new Service();
+    }
 
-        service = new Service(authDAO, userDAO, gameDAO);
+    public void handleRegister(Context ctx) throws ResponseException{
+        UserData userData = new Gson().fromJson(ctx.body(), UserData.class);
+        AuthData authData = service.register(userData);
+        ctx.json(new Gson().toJson(authData));
     }
 }

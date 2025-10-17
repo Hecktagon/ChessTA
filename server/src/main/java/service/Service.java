@@ -1,8 +1,6 @@
 package service;
 
-import dataaccess.AuthDAO;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
+import dataaccess.*;
 import dataobjects.AuthData;
 import dataobjects.UserData;
 import errors.ResponseException;
@@ -13,10 +11,10 @@ public class Service {
     GameDAO gameDAO;
     UserDAO userDAO;
 
-    public Service(AuthDAO authDataAccess, UserDAO userDataAccess, GameDAO gameDataAccess){
-        authDAO = authDataAccess;
-        userDAO = userDataAccess;
-        gameDAO = gameDataAccess;
+    public Service(){
+        authDAO = new LocalAuth();
+        userDAO = new LocalUser();
+        gameDAO = new LocalGame();
     }
 
 
