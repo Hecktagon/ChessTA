@@ -53,6 +53,12 @@ public class Service {
         authDAO.deleteAuth(authToken);
     }
 
+    public AuthData createGame(String authToken, String gameName) throws ResponseException {
+        if (authDAO.getAuth(authToken) == null){
+            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
+        }
+    }
+
     public void clearAll() throws ResponseException {
         authDAO.clearAuths();
         gameDAO.clearGames();
