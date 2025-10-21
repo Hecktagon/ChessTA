@@ -13,27 +13,29 @@ import dataobjects.*;
 public class Handler {
 
     Service service;
-    Gson deserial;
-    Gson serial;
+    Gson jsoner;
+    Gson dejson;
 
     public Handler(){
         service = new Service();
-        deserial = new GsonBuilder().serializeNulls().create();
-        serial = new Gson();
+        // removes null fields while making jsons
+        jsoner = new GsonBuilder().serializeNulls().create();
+        dejson = new Gson();
     }
 
+
     public void handleRegister(Context ctx) throws ResponseException{
-        UserData userData = serial.fromJson(ctx.body(), UserData.class);
+        UserData userData = dejson.fromJson(ctx.body(), UserData.class);
         nullDataCheck(userData.username(), userData.password(), userData.email());
         AuthData authData = service.register(userData);
-        ctx.json(deserial.toJson(authData));
+        ctx.json(jsoner.toJson(authData));
     }
 
     public void handleLogin(Context ctx) throws ResponseException{
-        UserData userData = serial.fromJson(ctx.body(), UserData.class);
+        UserData userData = dejson.fromJson(ctx.body(), UserData.class);
         nullDataCheck(userData.username(), userData.password());
         AuthData authData = service.login(userData);
-        ctx.json(deserial.toJson(authData));
+        ctx.json(jsoner.toJson(authData));
     }
 
     public void handleLogout(Context ctx) throws ResponseException {
@@ -43,9 +45,10 @@ public class Handler {
 
     public void handleCreateGame(Context ctx) throws ResponseException{
         String authToken = ctx.header("authorization");
-        GameData gameDataName = serial.fromJson(ctx.body(), GameData.class);
+        GameData gameDataName = dejson.fromJson(ctx.body(), GameData.class);
         nullDataCheck(gameDataName.gameName());
-        GameData gameDataID = new Gson()
+        GameData gameDataID = service.createGame(authToken, gameDataName.gameName());
+        ctx.json(jsoner.toJson(gameDataID));
     }
 
     public void handleClear(Context ctx) throws ResponseException{

@@ -3,17 +3,21 @@ package service;
 import dataaccess.*;
 import dataobjects.*;
 import errors.ResponseException;
+
+import java.util.HashSet;
 import java.util.UUID;
 
 public class Service {
     AuthDAO authDAO;
     GameDAO gameDAO;
     UserDAO userDAO;
+    HashSet<Integer> gameIDs;
 
     public Service(){
         authDAO = new LocalAuth();
         userDAO = new LocalUser();
         gameDAO = new LocalGame();
+        gameIDs = new HashSet<>();
     }
 
 
@@ -46,23 +50,27 @@ public class Service {
 
 
     public void logout(String authToken) throws ResponseException {
-        if (authDAO.getAuth(authToken) == null){
-            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
-        }
-
+        checkAuth(authToken);
         authDAO.deleteAuth(authToken);
     }
 
     public AuthData createGame(String authToken, String gameName) throws ResponseException {
-        if (authDAO.getAuth(authToken) == null){
-            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
-        }
+        AuthData authData = checkAuth(authToken);
+        GameData gameData = new GameData()
     }
 
     public void clearAll() throws ResponseException {
         authDAO.clearAuths();
         gameDAO.clearGames();
         userDAO.clearUsers();
+    }
+
+    private AuthData checkAuth(String authToken) throws ResponseException {
+        AuthData authData = authDAO.getAuth(authToken);
+        if ((authData) == null){
+            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
+        }
+        return authData;
     }
 
     private String generateToken(){
