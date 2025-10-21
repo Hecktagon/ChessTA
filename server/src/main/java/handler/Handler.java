@@ -36,7 +36,12 @@ public class Handler {
         service.logout(authToken);
     }
 
-
+    public void handleCreateGame(Context ctx) throws ResponseException {
+        String authToken = ctx.header("authorization");
+        GameData gameData = new Gson().fromJson(ctx.body(), GameData.class);
+        nullDataCheck(gameData.gameName());
+        service.createGame(authToken, gameData.gameName());
+    }
 
     public void handleClear(Context ctx) throws ResponseException{
         service.clearAll();
