@@ -1,6 +1,7 @@
 package handler;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
@@ -12,23 +13,27 @@ import dataobjects.*;
 public class Handler {
 
     Service service;
+    Gson deserial;
+    Gson serial;
 
     public Handler(){
         service = new Service();
+        deserial = new GsonBuilder().serializeNulls().create();
+        serial = new Gson();
     }
 
     public void handleRegister(Context ctx) throws ResponseException{
-        UserData userData = new Gson().fromJson(ctx.body(), UserData.class);
+        UserData userData = serial.fromJson(ctx.body(), UserData.class);
         nullDataCheck(userData.username(), userData.password(), userData.email());
         AuthData authData = service.register(userData);
-        ctx.json(new Gson().toJson(authData));
+        ctx.json(deserial.toJson(authData));
     }
 
     public void handleLogin(Context ctx) throws ResponseException{
-        UserData userData = new Gson().fromJson(ctx.body(), UserData.class);
+        UserData userData = serial.fromJson(ctx.body(), UserData.class);
         nullDataCheck(userData.username(), userData.password());
         AuthData authData = service.login(userData);
-        ctx.json(new Gson().toJson(authData));
+        ctx.json(deserial.toJson(authData));
     }
 
     public void handleLogout(Context ctx) throws ResponseException {
@@ -36,7 +41,12 @@ public class Handler {
         service.logout(authToken);
     }
 
-
+    public void handleCreateGame(Context ctx) throws ResponseException{
+        String authToken = ctx.header("authorization");
+        GameData gameDataName = serial.fromJson(ctx.body(), GameData.class);
+        nullDataCheck(gameDataName.gameName());
+        GameData gameDataID = new Gson()
+    }
 
     public void handleClear(Context ctx) throws ResponseException{
         service.clearAll();
