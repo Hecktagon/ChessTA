@@ -51,6 +51,11 @@ public class Handler {
         ctx.json(jsoner.toJson(gameDataID));
     }
 
+    public void handleJoinGame(Context ctx){
+        String authToken = ctx.header("authorization");
+        GameData gameDataName = dejson.fromJson(ctx.body(), GameData.class);
+    }
+
     public void handleClear(Context ctx) throws ResponseException{
         service.clearAll();
     }

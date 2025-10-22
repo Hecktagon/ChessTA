@@ -16,6 +16,7 @@ public class Server {
                 .post("/session", handler::handleLogin)
                 .delete("/session", handler::handleLogout)
                 .post("/game", handler::handleCreateGame)
+                .put("/game", handler::handleJoinGame)
                 .delete("/db", handler::handleClear)
                 .exception(ResponseException.class, handler::handleException);
 

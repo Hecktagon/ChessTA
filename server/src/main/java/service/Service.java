@@ -54,9 +54,11 @@ public class Service {
         authDAO.deleteAuth(authToken);
     }
 
-    public AuthData createGame(String authToken, String gameName) throws ResponseException {
+    public GameData createGame(String authToken, String gameName) throws ResponseException {
         AuthData authData = checkAuth(authToken);
-        GameData gameData = new GameData()
+        GameData gameData = new GameData(generateGameID(), null, null, gameName, null);
+        gameDAO.createGame(gameData);
+        return new GameData(generateGameID(), null, null, null, null);
     }
 
     public void clearAll() throws ResponseException {
@@ -71,6 +73,16 @@ public class Service {
             throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
         }
         return authData;
+    }
+
+    private Integer generateGameID(){
+        int i = 0;
+        while(true){
+            i++;
+            if(!gameIDs.contains(i)) {
+                return i;
+            }
+        }
     }
 
     private String generateToken(){
