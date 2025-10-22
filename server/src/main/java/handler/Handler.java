@@ -7,8 +7,11 @@ import dataaccess.GameDAO;
 import dataaccess.UserDAO;
 import errors.ResponseException;
 import io.javalin.http.Context;
+import records.JoinGameRequest;
 import service.Service;
 import dataobjects.*;
+
+import java.util.Map;
 
 public class Handler {
 
@@ -51,9 +54,11 @@ public class Handler {
         ctx.json(jsoner.toJson(gameDataID));
     }
 
-    public void handleJoinGame(Context ctx){
+    public void handleJoinGame(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
-        GameData gameDataName = dejson.fromJson(ctx.body(), GameData.class);
+        JoinGameRequest joinGameRequest = dejson.fromJson(ctx.body(), JoinGameRequest.class);
+        nullDataCheck(joinGameRequest.gameID(), joinGameRequest.playerColor());
+        service.joinGame(authToken, joinGameRequest);
     }
 
     public void handleClear(Context ctx) throws ResponseException{

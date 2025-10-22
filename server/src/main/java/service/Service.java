@@ -1,8 +1,10 @@
 package service;
 
+import chess.ChessGame;
 import dataaccess.*;
 import dataobjects.*;
 import errors.ResponseException;
+import records.JoinGameRequest;
 
 import java.util.HashSet;
 import java.util.UUID;
@@ -20,7 +22,7 @@ public class Service {
         gameIDs = new HashSet<>();
     }
 
-
+//  ### PUBLIC SERVICE METHODS ###
     public AuthData register(UserData registerRequest) throws ResponseException {
         boolean userTaken = userDAO.getUser(registerRequest.username()) != null;
         if (userTaken){
@@ -35,7 +37,6 @@ public class Service {
         return authData;
     }
 
-
     public AuthData login(UserData loginRequest) throws ResponseException {
         UserData userData = userDAO.getUser(loginRequest.username());
         if (userData == null || !userData.password().equals(loginRequest.password())){
@@ -47,7 +48,6 @@ public class Service {
 
         return authData;
     }
-
 
     public void logout(String authToken) throws ResponseException {
         checkAuth(authToken);
@@ -61,12 +61,38 @@ public class Service {
         return new GameData(generateGameID(), null, null, null, null);
     }
 
+    public void joinGame(String authToken, JoinGameRequest joinGameRequest) throws ResponseException {
+        AuthData authData = checkAuth(authToken);
+        GameData gameData = gameDAO.getGame(joinGameRequest.gameID());
+
+        GameData updatedGameData;
+        // Joining as BLACK:
+        if (joinGameRequest.playerColor().equals(ChessGame.TeamColor.BLACK)){
+            if(gameData.blackUsername() != null){
+                throw new ResponseException(ResponseException.Type.ALREADY_TAKEN);
+            }
+            updatedGameData = new GameData(gameData.gameID(), gameData.whiteUsername(), authData.username(),
+                    gameData.gameName(), gameData.game());
+        }
+        // Joining as WHITE:
+        else {
+            if(gameData.whiteUsername() != null){
+                throw new ResponseException(ResponseException.Type.ALREADY_TAKEN);
+            }
+            updatedGameData = new GameData(gameData.gameID(), authData.username(), gameData.blackUsername(),
+                    gameData.gameName(), gameData.game());
+        }
+
+        gameDAO.updateGame(updatedGameData);
+    }
+
     public void clearAll() throws ResponseException {
         authDAO.clearAuths();
         gameDAO.clearGames();
         userDAO.clearUsers();
     }
 
+//  ### PRIVATE HELPER METHODS ###
     private AuthData checkAuth(String authToken) throws ResponseException {
         AuthData authData = authDAO.getAuth(authToken);
         if ((authData) == null){
