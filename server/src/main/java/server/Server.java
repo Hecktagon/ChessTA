@@ -15,6 +15,7 @@ public class Server {
                 .post("/user", handler::handleRegister)
                 .post("/session", handler::handleLogin)
                 .delete("/session", handler::handleLogout)
+                .get("/game", handler::handleListGames)
                 .post("/game", handler::handleCreateGame)
                 .put("/game", handler::handleJoinGame)
                 .delete("/db", handler::handleClear)

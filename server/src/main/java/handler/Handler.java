@@ -11,6 +11,7 @@ import records.JoinGameRequest;
 import service.Service;
 import dataobjects.*;
 
+import java.util.Collection;
 import java.util.Map;
 
 public class Handler {
@@ -44,6 +45,12 @@ public class Handler {
     public void handleLogout(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
         service.logout(authToken);
+    }
+
+    public void handleListGames(Context ctx) throws ResponseException {
+        String authToken = ctx.header("authorization");
+        Collection<GameData> games =  service.listGames(authToken);
+        ctx.json(jsoner.toJson(Map.of("games", games)));
     }
 
     public void handleCreateGame(Context ctx) throws ResponseException{

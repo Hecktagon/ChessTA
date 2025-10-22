@@ -6,6 +6,7 @@ import dataobjects.*;
 import errors.ResponseException;
 import records.JoinGameRequest;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
 
@@ -54,16 +55,25 @@ public class Service {
         authDAO.deleteAuth(authToken);
     }
 
+    public Collection<GameData> listGames(String authToken) throws ResponseException {
+        AuthData authData = checkAuth(authToken);
+        return gameDAO.readGames();
+    }
+
     public GameData createGame(String authToken, String gameName) throws ResponseException {
         AuthData authData = checkAuth(authToken);
         GameData gameData = new GameData(generateGameID(), null, null, gameName, null);
         gameDAO.createGame(gameData);
-        return new GameData(generateGameID(), null, null, null, null);
+        return new GameData(gameData.gameID(), null, null, null, null);
     }
 
     public void joinGame(String authToken, JoinGameRequest joinGameRequest) throws ResponseException {
         AuthData authData = checkAuth(authToken);
         GameData gameData = gameDAO.getGame(joinGameRequest.gameID());
+
+        if(gameData == null){
+            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
+        }
 
         GameData updatedGameData;
         // Joining as BLACK:
@@ -106,6 +116,7 @@ public class Service {
         while(true){
             i++;
             if(!gameIDs.contains(i)) {
+                gameIDs.add(i);
                 return i;
             }
         }
