@@ -17,29 +17,27 @@ import java.util.Map;
 public class Handler {
 
     Service service;
-    Gson jsoner;
-    Gson dejson;
+    Gson gson;
 
     public Handler(){
         service = new Service();
         // removes null fields while making jsons
-        jsoner = new GsonBuilder().serializeNulls().create();
-        dejson = new Gson();
+        gson = new Gson();
     }
 
 
     public void handleRegister(Context ctx) throws ResponseException{
-        UserData userData = dejson.fromJson(ctx.body(), UserData.class);
+        UserData userData = gson.fromJson(ctx.body(), UserData.class);
         nullDataCheck(userData.username(), userData.password(), userData.email());
         AuthData authData = service.register(userData);
-        ctx.json(jsoner.toJson(authData));
+        ctx.json(gson.toJson(authData));
     }
 
     public void handleLogin(Context ctx) throws ResponseException{
-        UserData userData = dejson.fromJson(ctx.body(), UserData.class);
+        UserData userData = gson.fromJson(ctx.body(), UserData.class);
         nullDataCheck(userData.username(), userData.password());
         AuthData authData = service.login(userData);
-        ctx.json(jsoner.toJson(authData));
+        ctx.json(gson.toJson(authData));
     }
 
     public void handleLogout(Context ctx) throws ResponseException {
@@ -50,20 +48,20 @@ public class Handler {
     public void handleListGames(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
         Collection<GameData> games =  service.listGames(authToken);
-        ctx.json(jsoner.toJson(Map.of("games", games)));
+        ctx.json(gson.toJson(Map.of("games", games)));
     }
 
     public void handleCreateGame(Context ctx) throws ResponseException{
         String authToken = ctx.header("authorization");
-        GameData gameDataName = dejson.fromJson(ctx.body(), GameData.class);
+        GameData gameDataName = gson.fromJson(ctx.body(), GameData.class);
         nullDataCheck(gameDataName.gameName());
         GameData gameDataID = service.createGame(authToken, gameDataName.gameName());
-        ctx.json(jsoner.toJson(gameDataID));
+        ctx.json(gson.toJson(gameDataID));
     }
 
     public void handleJoinGame(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
-        JoinGameRequest joinGameRequest = dejson.fromJson(ctx.body(), JoinGameRequest.class);
+        JoinGameRequest joinGameRequest = gson.fromJson(ctx.body(), JoinGameRequest.class);
         nullDataCheck(joinGameRequest.gameID(), joinGameRequest.playerColor());
         service.joinGame(authToken, joinGameRequest);
     }
