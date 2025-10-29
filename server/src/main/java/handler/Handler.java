@@ -19,8 +19,8 @@ public class Handler {
     Service service;
     Gson gson;
 
-    public Handler(boolean SQL){
-        service = new Service(SQL);
+    public Handler(){
+        service = new Service();
         // removes null fields while making jsons
         gson = new Gson();
     }

@@ -5,7 +5,7 @@ import dataobjects.AuthData;
 import errors.ResponseException;
 
 public interface AuthDAO {
-    AuthData createAuth(AuthData auth) throws ResponseException;
+    void createAuth(AuthData auth) throws ResponseException;
 
     AuthData getAuth(String authToken) throws ResponseException;
 

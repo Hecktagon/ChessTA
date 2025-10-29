@@ -9,9 +9,8 @@ public class LocalAuth implements AuthDAO{
     private final HashMap<String, AuthData> authTable = new HashMap<>();
 
     @Override
-    public AuthData createAuth(AuthData auth) throws ResponseException {
+    public void createAuth(AuthData auth) throws ResponseException {
         authTable.put(auth.authToken(), auth);
-        return auth;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package dataaccess;
 
+import errors.ResponseException;
+
 import java.sql.*;
 import java.util.Properties;
 
@@ -75,5 +77,15 @@ public class DatabaseManager {
         var host = props.getProperty("db.host");
         var port = Integer.parseInt(props.getProperty("db.port"));
         connectionUrl = String.format("jdbc:mysql://%s:%d", host, port);
+    }
+
+    public static void configureDatabase(String statement) throws ResponseException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (var preparedStatement = conn.prepareStatement(statement)) {
+                preparedStatement.executeUpdate();
+            }
+        } catch (DataAccessException | SQLException ex) {
+            throw new ResponseException(ResponseException.Type.DATA_ACCESS_ERROR);
+        }
     }
 }

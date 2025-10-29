@@ -16,16 +16,29 @@ public class Service {
     UserDAO userDAO;
     HashSet<Integer> gameIDs;
 
-    public Service(boolean SQL){
-        if(SQL){
+    public Service(){
+        // try to open SQL database, if fails, open local storage.
+        try {
+            DatabaseManager.createDatabase();
             authDAO = new SQLAuth();
             userDAO = new SQLUser();
             gameDAO = new SQLGame();
-        }else{
+        } catch(DataAccessException | ResponseException e){
+            System.out.printf("""
+                    
+                    ### WARNING ###
+                    SQL Server failed:
+                    Error:
+                    %s
+                    
+                    Switching to local storage...
+                    
+                    """, e);
             authDAO = new LocalAuth();
             userDAO = new LocalUser();
             gameDAO = new LocalGame();
         }
+
         gameIDs = new HashSet<>();
     }
 

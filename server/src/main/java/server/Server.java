@@ -10,21 +10,7 @@ public class Server {
     private final Javalin javalin;
 
     public Server() {
-        try{
-            handler = new Handler(true);
-        } catch (Exception e){
-            System.out.printf("""
-                    
-                    ### WARNING ###
-                    SQL Server failed:
-                    Error:
-                    %s
-                    
-                    Switching to local storage...
-                    
-                    """, e);
-            handler = new Handler(false);
-        }
+        Handler handler = new Handler();
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", handler::handleRegister)
