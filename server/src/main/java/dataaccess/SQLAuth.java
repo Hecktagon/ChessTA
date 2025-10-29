@@ -2,7 +2,6 @@ package dataaccess;
 
 import dataobjects.AuthData;
 import errors.ResponseException;
-
 import java.sql.*;
 
 public class SQLAuth implements AuthDAO{
@@ -21,7 +20,7 @@ public class SQLAuth implements AuthDAO{
     @Override
     public void createAuth(AuthData auth) throws ResponseException {
         String statement = "INSERT INTO auth (authToken, username) VALUES (?, ?)";
-        executeUpdate(statement, auth.authToken(), auth.username());
+        DatabaseManager.executeUpdate(statement, auth.authToken(), auth.username());
     }
 
     @Override
@@ -33,16 +32,16 @@ public class SQLAuth implements AuthDAO{
     @Override
     public void deleteAuth(String authToken) throws ResponseException {
         String statement = "DELETE FROM auth WHERE authToken=?";
-        executeUpdate(statement);
+        DatabaseManager.executeUpdate(statement);
     }
 
     @Override
     public void clearAuths() throws ResponseException {
         String statement = "TRUNCATE auth";
-        executeUpdate(statement);
+        DatabaseManager.executeUpdate(statement);
     }
 
-    public AuthData executeSelect(String statement, Object... params) throws ResponseException {
+    private AuthData executeSelect(String statement, Object... params) throws ResponseException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
                 for (int i = 0; i < params.length; i++){
@@ -56,21 +55,6 @@ public class SQLAuth implements AuthDAO{
                 return null;
             }
         }catch (DataAccessException | SQLException dataEx) {
-            throw new ResponseException(ResponseException.Type.DATA_ACCESS_ERROR);
-        }
-    }
-
-    private void executeUpdate(String statement, Object... params) throws ResponseException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement preparedStatement = conn.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS)) {
-                for (int i = 0; i < params.length; i++){
-                    // for each of our params, we set the ?'s to those params
-                    preparedStatement.setObject(i + 1, params[i]);
-                }
-                // execute the statement with queries now in place
-                preparedStatement.executeUpdate();
-            }
-        } catch (DataAccessException | SQLException dataEx) {
             throw new ResponseException(ResponseException.Type.DATA_ACCESS_ERROR);
         }
     }

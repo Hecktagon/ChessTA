@@ -79,6 +79,21 @@ public class DatabaseManager {
         connectionUrl = String.format("jdbc:mysql://%s:%d", host, port);
     }
 
+    public static void executeUpdate(String statement, Object... params) throws ResponseException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+                for (int i = 0; i < params.length; i++){
+                    // for each of our params, we set the ?'s to those params
+                    preparedStatement.setObject(i + 1, params[i]);
+                }
+                // execute the statement with queries now in place
+                preparedStatement.executeUpdate();
+            }
+        } catch (DataAccessException | SQLException dataEx) {
+            throw new ResponseException(ResponseException.Type.DATA_ACCESS_ERROR);
+        }
+    }
+
     public static void configureDatabase(String statement) throws ResponseException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (var preparedStatement = conn.prepareStatement(statement)) {
