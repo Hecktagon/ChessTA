@@ -47,20 +47,16 @@ public class SQLAuth implements AuthDAO{
                     // for each of our params, we set the ?'s to those params
                     preparedStatement.setObject(i + 1, params[i]);
                 }
-
                 // execute the statement with queries now in place
                 ResultSet rs = preparedStatement.executeQuery();
-
                 // get the first table row from the result from the query
                 if(rs.next()){
                     // if query returned a row, return authData made from row
                     return new AuthData(rs.getString("authToken"), rs.getString("username"));
                 }
-
                 // else, return null
                 return null;
             }
-
         } catch (DataAccessException | SQLException dataEx) {
             throw new ResponseException(ResponseException.Type.DATA_ACCESS_ERROR);
         }

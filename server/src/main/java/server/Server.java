@@ -13,8 +13,16 @@ public class Server {
         try{
             handler = new Handler(true);
         } catch (Exception e){
-            System.out.printf("\n\n### WARNING ###\nSQL Server failed:\n" +
-                    "Error:\n%s\n\nSwitching to local storage...\n\n", e);
+            System.out.printf("""
+                    
+                    ### WARNING ###
+                    SQL Server failed:
+                    Error:
+                    %s
+                    
+                    Switching to local storage...
+                    
+                    """, e);
             handler = new Handler(false);
         }
 
