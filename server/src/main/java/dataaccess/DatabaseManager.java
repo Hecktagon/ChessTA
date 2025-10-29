@@ -52,6 +52,7 @@ public class DatabaseManager {
         }
     }
 
+    // Main function for loading settings from the db.properties file
     private static void loadPropertiesFromResources() {
         try (var propStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("db.properties")) {
             if (propStream == null) {
@@ -65,6 +66,7 @@ public class DatabaseManager {
         }
     }
 
+    // Helper function for loadPropertiesFromResources
     private static void loadProperties(Properties props) {
         databaseName = props.getProperty("db.name");
         dbUsername = props.getProperty("db.user");
