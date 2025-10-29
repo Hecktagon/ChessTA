@@ -9,7 +9,7 @@ import java.util.List;
 public class SQLGame implements GameDAO{
     private final String createStatement =
         """
-        CREATE TABLE IF NOT EXISTS  pet (
+        CREATE TABLE IF NOT EXISTS  game (
           `gameID` int NOT NULL AUTO_INCREMENT,
           `whiteUsername` varchar(256) NOT NULL,
           `blackUsername` varchar(256) NOT NULL,
