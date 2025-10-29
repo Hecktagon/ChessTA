@@ -16,10 +16,16 @@ public class Service {
     UserDAO userDAO;
     HashSet<Integer> gameIDs;
 
-    public Service(){
-        authDAO = new LocalAuth();
-        userDAO = new LocalUser();
-        gameDAO = new LocalGame();
+    public Service(boolean SQL){
+        if(SQL){
+            authDAO = new SQLAuth();
+            userDAO = new SQLUser();
+            gameDAO = new SQLGame();
+        }else{
+            authDAO = new LocalAuth();
+            userDAO = new LocalUser();
+            gameDAO = new LocalGame();
+        }
         gameIDs = new HashSet<>();
     }
 

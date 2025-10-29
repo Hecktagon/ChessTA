@@ -3,6 +3,9 @@ package dataaccess;
 import dataobjects.AuthData;
 import errors.ResponseException;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class SQLAuth implements AuthDAO{
@@ -35,14 +38,29 @@ public class SQLAuth implements AuthDAO{
 
     }
 
-    public void executeStatement(String statement) throws ResponseException {
-        try (var conn = DatabaseManager.getConnection()) {
-            try (var preparedStatement = conn.prepareStatement(statement)) {
-                var rs = preparedStatement.executeQuery();
+
+    // params is the queries to be inserted into the statement
+    private AuthData executeStatement(String statement, Object... params) throws ResponseException {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
+                for (int i = 0; i < params.length; i++){
+                    // for each of our params, we set the ?'s to those params
+                    preparedStatement.setObject(i + 1, params[i]);
+                }
+
+                // execute the statement with queries now in place
+                ResultSet rs = preparedStatement.executeQuery();
+
                 // get the first table row from the result from the query
-                rs.next();
-                System.out.println(rs.getInt(1));
+                if(rs.next()){
+                    // if query returned a row, return authData made from row
+                    return new AuthData(rs.getString("authToken"), rs.getString("username"));
+                }
+
+                // else, return null
+                return null;
             }
+
         } catch (DataAccessException | SQLException dataEx) {
             throw new ResponseException(ResponseException.Type.DATA_ACCESS_ERROR);
         }
