@@ -10,7 +10,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 public class SQLGame implements GameDAO{
@@ -32,27 +34,42 @@ public class SQLGame implements GameDAO{
 
     @Override
     public GameData createGame(GameData gameData) throws ResponseException {
-        return null;
+        String statement = "INSERT INTO game (gameName, chessGame) VALUES (?, ?)";
+        DatabaseManager.executeUpdate(statement, gameData.gameName(), gameData.game());
+        return gameData;
     }
 
     @Override
     public Collection<GameData> readGames() throws ResponseException {
-        return List.of();
+        String statement = "SELECT * FROM game";
+        return executeSelect(statement);
     }
 
     @Override
     public GameData getGame(Integer gameID) throws ResponseException {
-        return null;
+        String statement = "SELECT * FROM game WHERE gameID=?";
+        ArrayList<GameData> game = executeSelect(statement, gameID);
+        if (game.isEmpty()){
+            return null;
+        }
+        return game.getFirst();
     }
 
     @Override
     public GameData updateGame(GameData gameData) throws ResponseException {
-        return null;
+        String statement = """
+        UPDATE game
+        SET whiteUsername = ?, blackUsername = ?, chessGame = ?
+        WHERE gameID = ?
+        """;
+        return executeSelect(statement, gameData.whiteUsername(),
+                gameData.blackUsername(), gameData.gameID()).getFirst();
     }
 
     @Override
     public void clearGames() throws ResponseException {
-
+        String statement = "TRUNCATE auth";
+        DatabaseManager.executeUpdate(statement);
     }
 
     private GameData readChessGame(ResultSet rs) throws SQLException{
@@ -62,7 +79,7 @@ public class SQLGame implements GameDAO{
                 chessGame));
     }
 
-    private GameData executeSelect(String statement, Object... params) throws ResponseException {
+    private ArrayList<GameData> executeSelect(String statement, Object... params) throws ResponseException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
                 for (int i = 0; i < params.length; i++){
@@ -70,10 +87,11 @@ public class SQLGame implements GameDAO{
                     preparedStatement.setObject(i + 1, params[i]);
                 }
                 ResultSet rs = preparedStatement.executeQuery();
-                if(rs.next()){
-                    return readChessGame(rs);
+                ArrayList<GameData> games = new ArrayList<>();
+                while(rs.next()){
+                    games.add(readChessGame(rs));
                 }
-                return null;
+                return games;
             }
         }catch (DataAccessException | SQLException dataEx) {
             throw new ResponseException(ResponseException.Type.DATA_ACCESS_ERROR);

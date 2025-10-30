@@ -1,6 +1,7 @@
 package dataaccess;
 
 import dataobjects.AuthData;
+import dataobjects.GameData;
 import errors.ResponseException;
 import java.sql.*;
 
@@ -41,6 +42,10 @@ public class SQLAuth implements AuthDAO{
         DatabaseManager.executeUpdate(statement);
     }
 
+    private AuthData readAuth(ResultSet rs) throws SQLException {
+        return new AuthData(rs.getString("authToken"), rs.getString("username"));
+    }
+
     private AuthData executeSelect(String statement, Object... params) throws ResponseException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement preparedStatement = conn.prepareStatement(statement)) {
@@ -50,7 +55,7 @@ public class SQLAuth implements AuthDAO{
                 }
                 ResultSet rs = preparedStatement.executeQuery();
                 if(rs.next()){
-                    return(new AuthData(rs.getString("authToken"), rs.getString("username")));
+                    return readAuth(rs);
                 }
                 return null;
             }
