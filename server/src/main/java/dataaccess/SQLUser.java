@@ -22,17 +22,21 @@ public class SQLUser implements UserDAO {
 
     @Override
     public UserData createUser(UserData user) throws ResponseException {
-        return null;
+        String statement = "INSERT INTO user (username, password, email) VALUES (?, ?, ?)";
+        DatabaseManager.executeUpdate(statement, user.username(), user.password(), user.email());
+        return user;
     }
 
     @Override
     public UserData getUser(String userName) throws ResponseException {
-        return null;
+        String statement = "SELECT username, password, email FROM user WHERE username=?";
+        return executeSelect(statement, userName);
     }
 
     @Override
     public void clearUsers() throws ResponseException {
-
+        String statement = "TRUNCATE user";
+        DatabaseManager.executeUpdate(statement);
     }
 
     private UserData readUser(ResultSet rs) throws SQLException {

@@ -4,8 +4,8 @@ import chess.ChessGame;
 import dataaccess.*;
 import dataobjects.*;
 import errors.ResponseException;
+import org.mindrot.jbcrypt.BCrypt;
 import records.JoinGameRequest;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;
@@ -49,7 +49,8 @@ public class Service {
             throw new ResponseException(ResponseException.Type.ALREADY_TAKEN);
         }
 
-        userDAO.createUser(registerRequest);
+        userDAO.createUser(new UserData(registerRequest.username(),
+                passHash(registerRequest.password()), registerRequest.email()));
 
         AuthData authData = new AuthData(generateToken(), registerRequest.username());
         authDAO.createAuth(authData);
@@ -59,7 +60,7 @@ public class Service {
 
     public AuthData login(UserData loginRequest) throws ResponseException {
         UserData userData = userDAO.getUser(loginRequest.username());
-        if (userData == null || !userData.password().equals(loginRequest.password())){
+        if (userData == null || !BCrypt.checkpw(loginRequest.password(), userData.password())){
             throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
         }
 
@@ -144,4 +145,6 @@ public class Service {
     private String generateToken(){
         return UUID.randomUUID().toString();
     }
+
+    private String passHash(String password) {return BCrypt.hashpw(password, BCrypt.gensalt());}
 }

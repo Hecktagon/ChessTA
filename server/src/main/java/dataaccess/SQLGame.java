@@ -20,9 +20,9 @@ public class SQLGame implements GameDAO{
         String createStatement =
                 """
                 CREATE TABLE IF NOT EXISTS  game (
-                  `gameID` int NOT NULL AUTO_INCREMENT,
-                  `whiteUsername` varchar(256) NOT NULL,
-                  `blackUsername` varchar(256) NOT NULL,
+                  `gameID` int NOT NULL,
+                  `whiteUsername` varchar(256) DEFAULT NULL,
+                  `blackUsername` varchar(256) DEFAULT NULL,
                   `gameName` varchar(256) NOT NULL,
                   `game` TEXT DEFAULT NULL,
                   PRIMARY KEY (`gameID`),
@@ -34,8 +34,8 @@ public class SQLGame implements GameDAO{
 
     @Override
     public GameData createGame(GameData gameData) throws ResponseException {
-        String statement = "INSERT INTO game (gameName, chessGame) VALUES (?, ?)";
-        DatabaseManager.executeUpdate(statement, gameData.gameName(), gameData.game());
+        String statement = "INSERT INTO game (gameID, gameName, chessGame) VALUES (?, ?, ?)";
+        DatabaseManager.executeUpdate(statement, gameData.gameID(), gameData.gameName(), gameData.game());
         return gameData;
     }
 
@@ -68,7 +68,7 @@ public class SQLGame implements GameDAO{
 
     @Override
     public void clearGames() throws ResponseException {
-        String statement = "TRUNCATE auth";
+        String statement = "TRUNCATE game";
         DatabaseManager.executeUpdate(statement);
     }
 

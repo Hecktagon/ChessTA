@@ -88,7 +88,7 @@ public class StandardAPITests {
             assertAuthFieldsMissing(loginResult);
         }
     }
-
+    
     @Test
     @Order(3)
     @DisplayName("Login Unauthorized (Multiple Forms)")
