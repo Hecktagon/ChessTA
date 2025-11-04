@@ -33,7 +33,7 @@ public class SQLAuth implements AuthDAO{
     @Override
     public void deleteAuth(String authToken) throws ResponseException {
         String statement = "DELETE FROM auth WHERE authToken=?";
-        DatabaseManager.executeUpdate(statement);
+        DatabaseManager.executeUpdate(statement, authToken);
     }
 
     @Override

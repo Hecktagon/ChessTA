@@ -24,8 +24,8 @@ public class SQLGame implements GameDAO{
                   `whiteUsername` varchar(256) DEFAULT NULL,
                   `blackUsername` varchar(256) DEFAULT NULL,
                   `gameName` varchar(256) NOT NULL,
-                  `game` TEXT DEFAULT NULL,
-                  PRIMARY KEY (`gameID`),
+                  `chessGame` TEXT DEFAULT NULL,
+                  PRIMARY KEY (`gameID`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
                 """;
         DatabaseManager.configureDatabase(createStatement);
@@ -35,7 +35,8 @@ public class SQLGame implements GameDAO{
     @Override
     public GameData createGame(GameData gameData) throws ResponseException {
         String statement = "INSERT INTO game (gameID, gameName, chessGame) VALUES (?, ?, ?)";
-        DatabaseManager.executeUpdate(statement, gameData.gameID(), gameData.gameName(), gameData.game());
+        String gameJson = gameToJson(gameData.game());
+        DatabaseManager.executeUpdate(statement, gameData.gameID(), gameData.gameName(), gameJson);
         return gameData;
     }
 
@@ -62,8 +63,9 @@ public class SQLGame implements GameDAO{
         SET whiteUsername = ?, blackUsername = ?, chessGame = ?
         WHERE gameID = ?
         """;
-        return executeSelect(statement, gameData.whiteUsername(),
-                gameData.blackUsername(), gameData.gameID()).getFirst();
+        DatabaseManager.executeUpdate(statement, gameData.whiteUsername(),
+                gameData.blackUsername(), gameToJson(gameData.game()), gameData.gameID());
+        return gameData;
     }
 
     @Override
@@ -72,8 +74,12 @@ public class SQLGame implements GameDAO{
         DatabaseManager.executeUpdate(statement);
     }
 
+    private String gameToJson(ChessGame chessGame){
+        return new Gson().toJson(chessGame, ChessGame.class);
+    }
+
     private GameData readChessGame(ResultSet rs) throws SQLException{
-        ChessGame chessGame = new Gson().fromJson(rs.getString("game"), ChessGame.class);
+        ChessGame chessGame = new Gson().fromJson(rs.getString("chessGame"), ChessGame.class);
         return(new GameData(rs.getInt("gameID"), rs.getString("whiteUsername"),
                 rs.getString("blackUsername"), rs.getString("gameName"),
                 chessGame));

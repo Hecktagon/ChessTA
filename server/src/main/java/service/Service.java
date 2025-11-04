@@ -82,7 +82,7 @@ public class Service {
 
     public GameData createGame(String authToken, String gameName) throws ResponseException {
         AuthData authData = checkAuth(authToken);
-        GameData gameData = new GameData(generateGameID(), null, null, gameName, null);
+        GameData gameData = new GameData(generateGameID(), null, null, gameName, new ChessGame());
         gameDAO.createGame(gameData);
         return new GameData(gameData.gameID(), null, null, null, null);
     }
