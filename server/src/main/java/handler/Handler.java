@@ -82,6 +82,7 @@ public class Handler {
             case BAD_REQUEST -> 400;
             case ALREADY_TAKEN -> 403;
             case DATA_ACCESS_ERROR -> 500;
+            default -> 500;
         };
     }
 
