@@ -24,7 +24,8 @@ public class ResponseException extends Exception {
         UNAUTHORIZED,
         BAD_REQUEST,
         ALREADY_TAKEN,
-        DATA_ACCESS_ERROR;
+        DATA_ACCESS_ERROR,
+        SERVER_ERROR;
     }
 
 
@@ -34,6 +35,7 @@ public class ResponseException extends Exception {
             case BAD_REQUEST -> "Error: Bad request";
             case ALREADY_TAKEN -> "Error: Already taken";
             case DATA_ACCESS_ERROR -> "Error: Data access error";
+            case SERVER_ERROR -> "Error: Server Error";
         };
     }
 
