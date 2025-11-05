@@ -19,14 +19,14 @@ public class SQLGame implements GameDAO{
     public SQLGame() throws ResponseException {
         String createStatement =
                 """
-                CREATE TABLE IF NOT EXISTS  game (
+                CREATE TABLE IF NOT EXISTS game (
                   `gameID` int NOT NULL,
                   `whiteUsername` varchar(256) DEFAULT NULL,
                   `blackUsername` varchar(256) DEFAULT NULL,
                   `gameName` varchar(256) NOT NULL,
                   `chessGame` TEXT DEFAULT NULL,
                   PRIMARY KEY (`gameID`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+                )
                 """;
         DatabaseManager.configureDatabase(createStatement);
     }

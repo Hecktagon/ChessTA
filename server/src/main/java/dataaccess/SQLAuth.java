@@ -9,11 +9,11 @@ public class SQLAuth implements AuthDAO{
 
     public SQLAuth() throws ResponseException{
         String createStatement = """
-                CREATE TABLE IF NOT EXISTS  auth (
+                CREATE TABLE IF NOT EXISTS auth (
                   `authToken` varchar(256) NOT NULL,
                   `username` varchar(256) NOT NULL,
                   PRIMARY KEY (`authToken`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+                )
                 """;
         DatabaseManager.configureDatabase(createStatement);
     }
