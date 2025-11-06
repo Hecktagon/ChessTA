@@ -74,6 +74,12 @@ public class ServerFacade {
         return null;
     }
 
+    public void joinGame(String authToken, JoinGameRequest joinGameRequest) throws ResponseException {
+        HttpRequest request = buildRequest("PUT", "/game", joinGameRequest, authToken);
+        HttpResponse<String> response = sendRequest(request);
+        handleResponse(response, null);
+    }
+
 
     // make an HTTP request out of a method, endpoint path, and some java object as a body.
     private HttpRequest buildRequest(String method, String path, Object body, String authToken) {
