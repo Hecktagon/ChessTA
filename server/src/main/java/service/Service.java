@@ -5,7 +5,7 @@ import dataaccess.*;
 import dataobjects.*;
 import errors.ResponseException;
 import org.mindrot.jbcrypt.BCrypt;
-import records.JoinGameRequest;
+import dataobjects.JoinGameRequest;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.UUID;

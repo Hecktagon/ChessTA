@@ -1,4 +1,4 @@
-package records;
+package dataobjects;
 
 import chess.ChessGame;
 

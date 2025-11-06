@@ -1,18 +1,13 @@
 package handler;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import dataaccess.AuthDAO;
-import dataaccess.GameDAO;
-import dataaccess.UserDAO;
 import errors.ResponseException;
 import io.javalin.http.Context;
-import records.JoinGameRequest;
+import dataobjects.JoinGameRequest;
 import service.Service;
 import dataobjects.*;
 
 import java.util.Collection;
-import java.util.Map;
 
 public class Handler {
 
@@ -48,7 +43,7 @@ public class Handler {
     public void handleListGames(Context ctx) throws ResponseException {
         String authToken = ctx.header("authorization");
         Collection<GameData> games =  service.listGames(authToken);
-        ctx.json(gson.toJson(Map.of("games", games)));
+        ctx.json(gson.toJson(new ListGamesResponse(games)));
     }
 
     public void handleCreateGame(Context ctx) throws ResponseException{

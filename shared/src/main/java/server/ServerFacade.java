@@ -54,15 +54,24 @@ public class ServerFacade {
     }
 
     public Collection<GameData> listGames(String authToken) throws ResponseException {
-        HttpRequest request = buildRequest("GET", "/session", null, authToken);
+        HttpRequest request = buildRequest("GET", "/game", null, authToken);
         HttpResponse<String> response = sendRequest(request);
         ListGamesResponse gameList = handleResponse(response, ListGamesResponse.class);
         if (gameList != null){
             return gameList.games();
         }
-        else{
-            return null;
+        return null;
+    }
+
+    public Integer createGame(String authToken, String gameName) throws ResponseException {
+        GameData createGameRequest = new GameData(null, null, null, gameName, null);
+        HttpRequest request = buildRequest("POST", "/game", createGameRequest, authToken);
+        HttpResponse<String> response = sendRequest(request);
+        GameData createGameResponse = handleResponse(response, GameData.class);
+        if (createGameResponse != null){
+            return createGameRequest.gameID();
         }
+        return null;
     }
 
 
