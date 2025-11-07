@@ -1,13 +1,14 @@
 package client;
 
+import dataobjects.*;
 import errors.ResponseException;
 import server.ServerFacade;
 import static ui.EscapeSequences.*;
 
 public class Client {
     ServerFacade facade;
-    private String username = null;
-    private String authToken = null;
+    private String clientUsername = null;
+    private String clientAuthToken = null;
 
     public Client(ServerFacade serverFacade){
         facade = serverFacade;
@@ -15,7 +16,7 @@ public class Client {
 
     // ###   package-private methods:   ###
     String help(){
-        if (authToken == null) {
+        if (clientAuthToken == null) {
             return """
                     'quit' - Exit the program.
                     'register <username> <password> <email>' - Create a new account.
@@ -33,12 +34,16 @@ public class Client {
 
     String login(String[] params) throws ResponseException {
         checkParams(params, 2);
-
-        return "";
+        AuthData auth = facade.login(new UserData(params[0], params[1], null));
+        clientAuthToken = auth.authToken();
+        return String.format("You logged in as %s", auth.username());
     }
 
     String register(String[] params) throws ResponseException {
-        return "";
+        checkParams(params, 2);
+        AuthData auth = facade.register(new UserData(params[0], params[1], params[2]));
+        clientAuthToken = auth.authToken();
+        return String.format("You registered as %s", auth.username());
     }
 
     String logout() throws ResponseException {
