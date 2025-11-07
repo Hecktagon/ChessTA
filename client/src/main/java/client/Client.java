@@ -2,87 +2,68 @@ package client;
 
 import errors.ResponseException;
 import server.ServerFacade;
-
-import java.util.Arrays;
-import java.util.Scanner;
-
 import static ui.EscapeSequences.*;
 
 public class Client {
-    private final ServerFacade serverFacade;
+    ServerFacade facade;
     private String username = null;
     private String authToken = null;
-    private final Commands commands;
 
-    public Client(String serverUrl){
-        serverFacade = new ServerFacade(serverUrl);
-        commands = new Commands(serverFacade);
+    public Client(ServerFacade serverFacade){
+        facade = serverFacade;
     }
 
-    public void run(){
-        System.out.println(WHITE_KING + WHITE_QUEEN + " Welcome to chess! " + BLACK_QUEEN + BLACK_KING);
-        System.out.println(SET_TEXT_COLOR_DARK_GREY + "Type 'help' for options" + RESET_TEXT_COLOR);
-
-        // initialize scanner for getting input from user
-        Scanner scanner = new Scanner(System.in);
-        String result = "";
-        while(!result.equals("quit")){
-            printPrompt();
-            // grab the user input
-            String userInput = scanner.nextLine();
-
-            try{
-                result = execute(userInput);
-                System.out.println(SET_TEXT_COLOR_GREEN + result);
-            } catch (Exception e) {
-                System.out.println(SET_TEXT_COLOR_RED + e.getMessage());
-            }
+    // ###   package-private methods:   ###
+    String help(){
+        if (authToken == null) {
+            return """
+                    'quit' - Exit the program.
+                    'register <username> <password> <email>' - Create a new account.
+                    'login <username> <password>' - Login to an existing account.
+                    """;
         }
+        return """
+                'logout' - Log out of the current session.
+                'create' - Create a new chess game.
+                'list' - List all existing chess games.
+                'play' - Join a chess game.
+                'observe'
+                """;
     }
 
-    public String execute(String input) throws ResponseException {
-        try{
-            String[] tokens = input.toLowerCase().split(" ");
-            String command = (tokens.length > 0) ? tokens[0] : "help";
-            String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
+    String login(String[] params) throws ResponseException {
+        checkParams(params, 2);
 
-            return switch(command){
-                case "quit" -> "quit";
-                case "login" -> commands.login(params);
-                case "register" -> commands.register(params);
-                case "logout" -> commands.logout();
-                case "create" -> commands.createGame(params);
-                case "list" -> commands.listGames();
-                case "play" -> commands.playGame(params);
-                case "observe" -> commands.observeGame(params);
-                default -> commands.help();
-            };
-        } catch (ResponseException e){
-            if (e.getType().equals(ResponseException.Type.CLIENT_ERROR)){
-                return e.getMessage();
-            }
-            throw e;
+        return "";
+    }
+
+    String register(String[] params) throws ResponseException {
+        return "";
+    }
+
+    String logout() throws ResponseException {
+        return "";
+    }
+
+    String createGame(String[] params) throws ResponseException {
+        return "";
+    }
+
+    String listGames() throws ResponseException {
+        return "";
+    }
+
+    String playGame(String[] params) throws ResponseException {
+        return"";
+    }
+
+    String observeGame(String[] params) throws ResponseException {
+        return"";
+    }
+
+    private void checkParams(String[] params, int len) throws ResponseException {
+        if(params.length != len){
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Incorrect number of parameters.");
         }
-    }
-
-    private void printPrompt() {
-        System.out.print("\n" + RESET_TEXT_COLOR + ">>> " + SET_TEXT_COLOR_BLUE);
-    }
-
-    // ###   Package-private methods:   ###
-    String getAuth() {
-        return authToken;
-    }
-
-    void setAuth(String authToken) {
-        this.authToken = authToken;
-    }
-
-    String getUser() {
-        return username;
-    }
-
-    void setUser(String username) {
-        this.username = username;
     }
 }
