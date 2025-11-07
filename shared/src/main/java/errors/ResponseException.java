@@ -19,23 +19,29 @@ public class ResponseException extends Exception {
         message = typeToMessage();
     }
 
+    public ResponseException(Type exceptionType, String msg){
+        type = exceptionType;
+        message = msg;
+    }
+
 
     public enum Type {
         UNAUTHORIZED,
         BAD_REQUEST,
         ALREADY_TAKEN,
         DATA_ACCESS_ERROR,
-        SERVER_ERROR;
+        SERVER_ERROR,
+        CLIENT_ERROR;
     }
 
 
     private String typeToMessage() {
         return switch (type){
-            case UNAUTHORIZED -> "Error: Unauthorized";
             case BAD_REQUEST -> "Error: Bad request";
             case ALREADY_TAKEN -> "Error: Already taken";
             case DATA_ACCESS_ERROR -> "Error: Data access error";
             case SERVER_ERROR -> "Error: Server Error";
+            default -> "Error: Unauthorized";
         };
     }
 
