@@ -3,12 +3,16 @@ package client;
 import dataobjects.*;
 import errors.ResponseException;
 import server.ServerFacade;
+
+import java.util.ArrayList;
+
 import static ui.EscapeSequences.*;
 
 public class Client {
     ServerFacade facade;
     private String clientUsername = null;
     private String clientAuthToken = null;
+    private final ArrayList<Integer> gameIDs = new ArrayList<>();
 
     public Client(ServerFacade serverFacade){
         facade = serverFacade;
@@ -25,7 +29,7 @@ public class Client {
         }
         return """
                 'logout' - Log out of the current session.
-                'create' - Create a new chess game.
+                'create <game name>' - Create a new chess game.
                 'list' - List all existing chess games.
                 'play' - Join a chess game.
                 'observe'
@@ -36,14 +40,16 @@ public class Client {
         checkParams(params, 2);
         AuthData auth = facade.login(new UserData(params[0], params[1], null));
         clientAuthToken = auth.authToken();
-        return String.format("You logged in as %s", auth.username());
+        clientUsername = auth.username();
+        return String.format("You logged in as %s.", clientUsername);
     }
 
     String register(String[] params) throws ResponseException {
         checkParams(params, 3);
         AuthData auth = facade.register(new UserData(params[0], params[1], params[2]));
         clientAuthToken = auth.authToken();
-        return String.format("You registered as %s", auth.username());
+        clientUsername = auth.username();
+        return String.format("You registered as %s.", clientUsername);
     }
 
     String logout() throws ResponseException {
@@ -54,7 +60,10 @@ public class Client {
     }
 
     String createGame(String[] params) throws ResponseException {
-        return "";
+        checkLoggedIn();
+        Integer gameID = facade.createGame(clientAuthToken, params[0]); // [0] == gameName
+        gameIDs.add(gameID);
+        return String.format("You created the game %s.", params[0]);
     }
 
     String listGames() throws ResponseException {
