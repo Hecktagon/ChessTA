@@ -40,14 +40,17 @@ public class Client {
     }
 
     String register(String[] params) throws ResponseException {
-        checkParams(params, 2);
+        checkParams(params, 3);
         AuthData auth = facade.register(new UserData(params[0], params[1], params[2]));
         clientAuthToken = auth.authToken();
         return String.format("You registered as %s", auth.username());
     }
 
     String logout() throws ResponseException {
-        return "";
+        checkLoggedIn();
+        facade.logout(clientAuthToken);
+        clientAuthToken = null;
+        return "You logged out.";
     }
 
     String createGame(String[] params) throws ResponseException {
@@ -69,6 +72,12 @@ public class Client {
     private void checkParams(String[] params, int len) throws ResponseException {
         if(params.length != len){
             throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Incorrect number of parameters.");
+        }
+    }
+
+    private void checkLoggedIn() throws ResponseException {
+        if (clientAuthToken == null) {
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Please log in first.");
         }
     }
 }
