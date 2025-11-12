@@ -9,17 +9,16 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class Repl {
-    private final ServerFacade serverFacade;
     private final Client client;
 
     public Repl(String serverUrl){
-        serverFacade = new ServerFacade(serverUrl);
+        ServerFacade serverFacade = new ServerFacade(serverUrl);
         client = new Client(serverFacade);
     }
 
     public void run(){
         System.out.println(WHITE_KING + WHITE_QUEEN + " Welcome to chess! " + BLACK_QUEEN + BLACK_KING);
-        System.out.println(SET_TEXT_COLOR_DARK_GREY + "Type 'help' for options" + RESET_TEXT_COLOR);
+        System.out.println(SET_TEXT_COLOR_GREEN + "Type 'help' for options" + RESET_TEXT_COLOR);
 
         // initialize scanner for getting input from user
         Scanner scanner = new Scanner(System.in);
@@ -31,9 +30,10 @@ public class Repl {
 
             try{
                 result = execute(userInput);
-                System.out.println(SET_TEXT_COLOR_GREEN + result);
+                System.out.println(RESET_TEXT_COLOR + RESET_BG_COLOR + result);
             } catch (Exception e) {
-                System.out.println(SET_TEXT_COLOR_RED + e.getMessage());
+                String message = e.getMessage() == null ? "Server encountered an error :(" : e.getMessage();
+                System.out.println(SET_TEXT_COLOR_RED + "WARNING: "+ message);
             }
         }
     }
@@ -64,6 +64,6 @@ public class Repl {
     }
 
     private void printPrompt() {
-        System.out.print("\n" + RESET_TEXT_COLOR + ">>> " + SET_TEXT_COLOR_BLUE);
+        System.out.print(RESET_TEXT_COLOR + ">>> " + SET_TEXT_COLOR_BLUE);
     }
 }

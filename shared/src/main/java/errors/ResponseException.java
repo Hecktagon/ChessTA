@@ -52,4 +52,9 @@ public class ResponseException extends Exception {
     public Type getType() {
         return type;
     }
+
+    @Override
+    public String getMessage(){
+        return message;
+    }
 }
