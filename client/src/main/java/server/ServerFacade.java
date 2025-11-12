@@ -80,7 +80,6 @@ public class ServerFacade {
         handleResponse(response, null);
     }
 
-
     // make an HTTP request out of a method, endpoint path, and some java object as a body.
     private HttpRequest buildRequest(String method, String path, Object body, String authToken) {
         Builder request = HttpRequest.newBuilder()
