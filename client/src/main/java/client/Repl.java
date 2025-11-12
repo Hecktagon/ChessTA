@@ -38,7 +38,7 @@ public class Repl {
         }
     }
 
-    public String execute(String input) throws ResponseException {
+    private String execute(String input) throws ResponseException {
         try{
             String[] tokens = input.toLowerCase().split(" ");
             String command = (tokens.length > 0) ? tokens[0] : "help";
