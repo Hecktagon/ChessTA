@@ -77,11 +77,16 @@ public class Service {
 
     public Collection<GameData> listGames(String authToken) throws ResponseException {
         AuthData authData = checkAuth(authToken);
-        return gameDAO.readGames();
+        Collection<GameData> gameList = gameDAO.readGames();
+        for(GameData game : gameList){
+            gameIDs.add(game.gameID());
+        }
+        return gameList;
     }
 
     public GameData createGame(String authToken, String gameName) throws ResponseException {
         AuthData authData = checkAuth(authToken);
+        listGames(authToken); // populate gameIDs to prevent duplicate IDs
         GameData gameData = new GameData(generateGameID(), null, null, gameName, new ChessGame());
         gameDAO.createGame(gameData);
         return new GameData(gameData.gameID(), null, null, null, null);

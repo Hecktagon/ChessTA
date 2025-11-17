@@ -23,7 +23,7 @@ public class Repl {
         // initialize scanner for getting input from user
         Scanner scanner = new Scanner(System.in);
         String result = "";
-        while(!result.equals("quit")){
+        while(!result.equals("quitting...")){
             printPrompt();
             // grab the user input
             String userInput = scanner.nextLine();
@@ -45,7 +45,7 @@ public class Repl {
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
             return switch(command){
-                case "quit" -> "quit";
+                case "quit" -> "quitting...";
                 case "login" -> client.login(params);
                 case "register" -> client.register(params);
                 case "logout" -> client.logout();

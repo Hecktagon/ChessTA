@@ -1,8 +1,11 @@
 package client;
 
+import chess.ChessBoard;
+import chess.ChessGame;
 import dataobjects.*;
 import errors.ResponseException;
 import server.ServerFacade;
+import ui.GameUI;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,9 +17,11 @@ public class Client {
     private String clientUsername = null;
     private String clientAuthToken = null;
     private ArrayList<Integer> gameIDs = new ArrayList<>();
+    private GameUI gameUI;
 
     public Client(ServerFacade serverFacade){
         facade = serverFacade;
+        gameUI = new GameUI();
     }
 
     // ###   package-private methods:   ###
@@ -25,16 +30,14 @@ public class Client {
             return """
                     'quit' - Exit the program.
                     'register <username> <password> <email>' - Create a new account.
-                    'login <username> <password>' - Login to an existing account.
-                    """;
+                    'login <username> <password>' - Login to an existing account.""";
         }
         return """
                 'logout' - Log out of the current session.
                 'create <game name>' - Create a new chess game.
                 'list' - List all existing chess games.
                 'play' - Join a chess game.
-                'observe'
-                """;
+                'observe'""";
     }
 
     String login(String[] params) throws ResponseException {
@@ -74,6 +77,7 @@ public class Client {
         gameIDs = new ArrayList<>();
         StringBuilder result = new StringBuilder();
         int i = 0;
+        if(gameList.isEmpty()){return "No ongoing games.";}
         for(GameData game : gameList){
             i++;
             gameIDs.add(game.gameID());
@@ -84,11 +88,42 @@ public class Client {
     }
 
     String playGame(String[] params) throws ResponseException {
-        return"";
+        checkLoggedIn();
+        checkParams(params, 2);
+        int gameID = gameNumToGameID(params[0]);
+        ChessGame.TeamColor color = strToColor(params[1]);
+        facade.joinGame(clientAuthToken, new JoinGameRequest(gameID, color));
+        // Temporary code for printing a default board:
+        ChessBoard board = new ChessBoard();
+        board.resetBoard();
+        return String.format("You joined game %s as %s.", params[0], params[1]) + "\n" + gameUI.gameToUi(board, color);
     }
 
     String observeGame(String[] params) throws ResponseException {
-        return"";
+        checkLoggedIn();
+        checkParams(params, 1);
+        int gameID = gameNumToGameID(params[0]);
+        // Temporary code for printing a default board:
+        ChessBoard board = new ChessBoard();
+        board.resetBoard();
+        return String.format("You are observing game %s.", params[0]) + "\n" +
+                gameUI.gameToUi(board, ChessGame.TeamColor.WHITE);
+    }
+
+    // gracefully handles a non integer input from user.
+    private int gameNumToGameID(String stringNum) throws ResponseException {
+        int gameNum;
+        try {
+            gameNum = Integer.parseInt(stringNum);
+        } catch (NumberFormatException e) {
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Game number must be numerical.");
+        }
+        if (gameIDs.isEmpty()){listGames();} // populate the game list if it is empty
+        if (gameNum <= 0 || gameNum > gameIDs.size()){
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR,
+                    String.format("No game with number %d", gameNum));
+        }
+        return gameIDs.get(gameNum - 1);
     }
 
     private void checkParams(String[] params, int len) throws ResponseException {
@@ -108,5 +143,14 @@ public class Client {
             return username;
         }
         return SET_BG_COLOR_GREEN + SET_TEXT_COLOR_BLACK + " Available " + RESET_TEXT_COLOR + RESET_BG_COLOR;
+    }
+
+    private ChessGame.TeamColor strToColor(String colorStr) throws ResponseException {
+        if (colorStr.equalsIgnoreCase("white")){
+            return ChessGame.TeamColor.WHITE;
+        } else if (colorStr.equalsIgnoreCase("black")) {
+            return ChessGame.TeamColor.BLACK;
+        }
+        throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Team color must be 'black' or 'white'.");
     }
 }
