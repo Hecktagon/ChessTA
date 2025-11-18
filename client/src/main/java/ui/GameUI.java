@@ -13,7 +13,7 @@ import static ui.EscapeSequences.*;
 public class GameUI {
     private final String[] columns = {"a", "b", "c", "d", "e", "f", "g", "h"};
     private final String[] rows = {"1", "2", "3", "4", "5", "6", "7", "8"};
-    private final String RESET = RESET_BG_COLOR + RESET_TEXT_COLOR + RESET_TEXT_BOLD_FAINT;
+    private static final String RESET = RESET_BG_COLOR + RESET_TEXT_COLOR + RESET_TEXT_BOLD_FAINT;
     private final String[] whitePieces = {WHITE_BISHOP, WHITE_KING, WHITE_KNIGHT, WHITE_PAWN, WHITE_QUEEN, WHITE_ROOK};
     private final String[] blackPieces = {BLACK_BISHOP, BLACK_KING, BLACK_KNIGHT, BLACK_PAWN, BLACK_QUEEN, BLACK_ROOK};
 

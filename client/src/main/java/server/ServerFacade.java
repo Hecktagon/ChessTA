@@ -13,7 +13,6 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Collection;
-import java.util.Map;
 
 public class ServerFacade {
     // a client side HTTP object for handling HTTP requests/responses.
@@ -129,7 +128,7 @@ public class ServerFacade {
 
         // if response is an error:
         if ((status / 100) != 2) {
-            throw new ResponseException(HttpCodeToException(status));
+            throw new ResponseException(httpCodeToException(status));
         }
 
         // if you have a dataType you want to deserialize into:
@@ -142,7 +141,7 @@ public class ServerFacade {
     }
 
 
-    private ResponseException.Type HttpCodeToException(int code){
+    private ResponseException.Type httpCodeToException(int code){
         return switch(code){
             case 401 -> ResponseException.Type.UNAUTHORIZED;
             case 400 -> ResponseException.Type.BAD_REQUEST;
