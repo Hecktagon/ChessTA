@@ -33,7 +33,7 @@ public class Repl {
                 System.out.println(RESET_TEXT_COLOR + RESET_BG_COLOR + result);
             } catch (Exception e) {
                 String message = e.getMessage() == null ? "Server encountered an error :(" : e.getMessage();
-                System.out.println(SET_TEXT_COLOR_RED + "WARNING: "+ message);
+                System.out.println(SET_TEXT_COLOR_RED + message);
             }
         }
     }
@@ -53,7 +53,8 @@ public class Repl {
                 case "list" -> client.listGames();
                 case "play" -> client.playGame(params);
                 case "observe" -> client.observeGame(params);
-                default -> client.help();
+                case "help" -> client.help();
+                default -> "Unrecognized command, try:\n" + client.help();
             };
         } catch (ResponseException e){
             if (e.getType().equals(ResponseException.Type.CLIENT_ERROR)){

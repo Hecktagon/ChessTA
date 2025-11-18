@@ -28,16 +28,18 @@ public class Client {
     String help(){
         if (clientAuthToken == null) {
             return """
+                    'help' - Lists command options.
                     'quit' - Exit the program.
                     'register <username> <password> <email>' - Create a new account.
                     'login <username> <password>' - Login to an existing account.""";
         }
         return """
+                'help' - Lists command options.
                 'logout' - Log out of the current session.
                 'create <game name>' - Create a new chess game.
                 'list' - List all existing chess games.
-                'play' - Join a chess game.
-                'observe'""";
+                'play' <game number> <white/black> - Join a chess game.
+                'observe <game number> - Watch a game.'""";
     }
 
     String login(String[] params) throws ResponseException {
@@ -128,7 +130,8 @@ public class Client {
 
     private void checkParams(String[] params, int len) throws ResponseException {
         if(params.length != len){
-            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Incorrect number of parameters.");
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Incorrect number of parameters. " +
+                    "Try 'help' for a list of valid commands");
         }
     }
 
