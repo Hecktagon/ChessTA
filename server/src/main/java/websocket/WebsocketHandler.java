@@ -1,4 +1,4 @@
-package handler;
+package websocket;
 
 import io.javalin.websocket.*;
 import org.jetbrains.annotations.NotNull;

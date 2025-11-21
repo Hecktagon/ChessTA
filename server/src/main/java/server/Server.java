@@ -2,7 +2,7 @@ package server;
 
 import errors.ResponseException;
 import handler.Handler;
-import handler.WebsocketHandler;
+import websocket.WebsocketHandler;
 import io.javalin.*;
 
 public class Server {
