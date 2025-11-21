@@ -21,14 +21,12 @@ public class Server {
                 .put("/game", handler::handleJoinGame)
                 .delete("/db", handler::handleClear)
                 .exception(ResponseException.class, handler::handleException)
+
                 .ws("/ws", ws -> {
                     ws.onConnect(wsHandler);
                     ws.onMessage(wsHandler);
                     ws.onClose(wsHandler);
                 });
-
-        // Register your endpoints and exception handlers here.
-
     }
 
     public int run(int desiredPort) {

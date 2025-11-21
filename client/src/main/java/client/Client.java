@@ -6,22 +6,34 @@ import dataobjects.*;
 import errors.ResponseException;
 import server.ServerFacade;
 import ui.GameUI;
+import websocket.ServerMessageObserver;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import static ui.EscapeSequences.*;
 
-public class Client {
+public class Client implements ServerMessageObserver {
     ServerFacade facade;
     private String clientUsername = null;
     private String clientAuthToken = null;
     private ArrayList<Integer> gameIDs = new ArrayList<>();
     private GameUI gameUI;
+    private ClientGameInfo clientGameInfo = null;
 
     public Client(ServerFacade serverFacade){
         facade = serverFacade;
         gameUI = new GameUI();
+    }
+
+    @Override
+    public void loadGame(ChessGame game){
+        String boardString = gameUI.gameToUi(game.getBoard(), clientGameInfo.clientColor());
+    }
+
+    @Override
+    public void notify(String serverMessage) {
+        System.out.println(serverMessage);
     }
 
     // ###   package-private methods:   ###
