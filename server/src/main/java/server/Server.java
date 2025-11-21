@@ -2,15 +2,15 @@ package server;
 
 import errors.ResponseException;
 import handler.Handler;
+import handler.WebsocketHandler;
 import io.javalin.*;
 
 public class Server {
-
-    private Handler handler;
     private final Javalin javalin;
 
     public Server() {
         Handler handler = new Handler();
+        WebsocketHandler wsHandler = new WebsocketHandler();
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", handler::handleRegister)
@@ -20,7 +20,12 @@ public class Server {
                 .post("/game", handler::handleCreateGame)
                 .put("/game", handler::handleJoinGame)
                 .delete("/db", handler::handleClear)
-                .exception(ResponseException.class, handler::handleException);
+                .exception(ResponseException.class, handler::handleException)
+                .ws("/ws", ws -> {
+                    ws.onConnect(wsHandler);
+                    ws.onMessage(wsHandler);
+                    ws.onClose(wsHandler);
+                });
 
         // Register your endpoints and exception handlers here.
 
