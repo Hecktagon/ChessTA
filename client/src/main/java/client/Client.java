@@ -7,6 +7,7 @@ import errors.ResponseException;
 import server.ServerFacade;
 import ui.GameUI;
 import websocket.ServerMessageObserver;
+import websocket.WebsocketFacade;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -15,14 +16,16 @@ import static ui.EscapeSequences.*;
 
 public class Client implements ServerMessageObserver {
     ServerFacade facade;
+    WebsocketFacade ws;
     private String clientUsername = null;
     private String clientAuthToken = null;
     private ArrayList<Integer> gameIDs = new ArrayList<>();
     private GameUI gameUI;
     private ClientGameInfo clientGameInfo = null;
 
-    public Client(ServerFacade serverFacade){
-        facade = serverFacade;
+    public Client(String serverUrl){
+        facade = new ServerFacade(serverUrl);
+        ws = new WebsocketFacade(serverUrl, this);
         gameUI = new GameUI();
     }
 
@@ -98,7 +101,7 @@ public class Client implements ServerMessageObserver {
             result.append(String.format("%d: Game: %s, White: %s, Black: %s \n",
                     i, game.gameName(), colorOpen(game.whiteUsername()), colorOpen(game.blackUsername())));
         }
-        return result.toString();
+        return result.toString().trim();
     }
 
     String playGame(String[] params) throws ResponseException {
