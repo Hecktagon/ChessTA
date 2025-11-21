@@ -39,7 +39,7 @@ public class Client implements ServerMessageObserver {
         System.out.println(serverMessage);
     }
 
-    // ###   package-private methods:   ###
+    // ## Logged out commands: ##
     String help(){
         if (clientAuthToken == null) {
             return """
@@ -73,6 +73,7 @@ public class Client implements ServerMessageObserver {
         return String.format("You registered as %s.", clientUsername);
     }
 
+    // ## Logged in commands: ##
     String logout() throws ResponseException {
         checkLoggedIn();
         facade.logout(clientAuthToken);
@@ -99,7 +100,7 @@ public class Client implements ServerMessageObserver {
             i++;
             gameIDs.add(game.gameID());
             result.append(String.format("%d: Game: %s, White: %s, Black: %s \n",
-                    i, game.gameName(), colorOpen(game.whiteUsername()), colorOpen(game.blackUsername())));
+                    i, game.gameName(), userSlotString(game.whiteUsername()), userSlotString(game.blackUsername())));
         }
         return result.toString().trim();
     }
@@ -127,7 +128,28 @@ public class Client implements ServerMessageObserver {
                 gameUI.gameToUi(board, ChessGame.TeamColor.WHITE);
     }
 
-    // gracefully handles a non integer input from user.
+    // ## In game commands: ##
+    void redraw(){
+
+    }
+
+    void leave(){
+
+    }
+
+    void makeMove(){
+
+    }
+
+    void resign(){
+
+    }
+
+    void showMoves(){
+
+    }
+
+    // ## Helper methods: ##
     private int gameNumToGameID(String stringNum) throws ResponseException {
         int gameNum;
         try {
@@ -156,7 +178,14 @@ public class Client implements ServerMessageObserver {
         }
     }
 
-    private String colorOpen(String username){
+    private void checkInGame() throws ResponseException {
+        checkLoggedIn();
+        if (clientGameInfo == null){
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Please join a game first.");
+        }
+    }
+
+    private String userSlotString(String username){
         if (username != null){
             return username;
         }
