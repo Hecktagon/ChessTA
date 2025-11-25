@@ -13,8 +13,6 @@ public class WsConnectionsManager {
     // TODO: HashSet prevents duplicate sessions in a game, do we want that?
     private final ConcurrentHashMap<Integer, HashSet<Session>> gameConnections = new ConcurrentHashMap<>();
 
-    //TODO: will have to keep track of connections per game
-
     public void addSessionToGame(Session session, Integer gameID){
         if(!gameConnections.containsKey(gameID)){
             gameConnections.put(gameID, new HashSet<>());
@@ -26,10 +24,13 @@ public class WsConnectionsManager {
         tryGetGameSessions(gameID).remove(session);
     }
 
-    public void gameBroadcast(Integer gameID, ServerMessage message, Session root) throws IOException {
+    // leave "excludedSession" as null to not exclude any sessions.
+    public void gameBroadcast(Integer gameID, ServerMessage message, Session excludedSession) throws IOException {
         HashSet<Session> gameSessions = tryGetGameSessions(gameID);
         for(Session session : gameSessions){
-            sendServerMessage(session, message);
+            if(!session.equals(excludedSession)) {
+                sendServerMessage(session, message);
+            }
         }
     }
 
