@@ -23,9 +23,13 @@ public class Client implements ServerMessageObserver {
     private GameUI gameUI;
     private ClientGameInfo clientGameInfo = null;
 
-    public Client(String serverUrl){
+    public Client(String serverUrl) {
         facade = new ServerFacade(serverUrl);
-        ws = new WebsocketFacade(serverUrl, this);
+        try {
+            ws = new WebsocketFacade(serverUrl, this);
+        } catch (ResponseException e) {
+            System.out.println(SET_BG_COLOR_RED + "WEBSOCKET SETUP FAILED" + RESET_BG_COLOR);
+        }
         gameUI = new GameUI();
     }
 

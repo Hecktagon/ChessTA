@@ -61,25 +61,29 @@ public class WebsocketHandler  implements WsConnectHandler, WsMessageHandler, Ws
 
     private void playerMakesMove(Session session, MakeMoveCommand command) throws ResponseException, IOException{
         String username = usernameFromAuth(command.getAuthToken());
-        GameData game = gameDAO.getGame(command.getGameID());
+        GameData gameData = gameDAO.getGame(command.getGameID());
         try {
-            game.game().makeMove(command.getMove());
+            gameData.game().makeMove(command.getMove());
         } catch (InvalidMoveException e){
             throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Invalid move.");
         }
-        gameDAO.updateGame(game);
-        connections.gameBroadcast(command.getGameID(), new LoadGameMessage(game.game()), null);
+        gameDAO.updateGame(gameData);
+        connections.gameBroadcast(command.getGameID(), new LoadGameMessage(gameData.game()), null);
         connections.gameBroadcast(command.getGameID(), new NotificationMessage(
                 username + " made move " + command.getMove().toString()), null);
     }
 
     private void playerLeaves(Session session, UserGameCommand command) throws ResponseException, IOException{
         String username = usernameFromAuth(command.getAuthToken());
+        connections.removeSessionFromGame(session, command.getGameID());
         connections.gameBroadcast(command.getGameID(), new NotificationMessage(username + "left the game."), session);
     }
 
     private void playerResigns(Session session, UserGameCommand command) throws ResponseException, IOException{
         String username = usernameFromAuth(command.getAuthToken());
+        GameData gameData = gameDAO.getGame(command.getGameID());
+        gameData.game().setGameOver(true);
+        gameDAO.updateGame(gameData);
         connections.gameBroadcast(command.getGameID(), new NotificationMessage(username + "resigned."), session);
     }
 
