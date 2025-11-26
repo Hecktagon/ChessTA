@@ -22,14 +22,11 @@ public class Client implements ServerMessageObserver {
     private ArrayList<Integer> gameIDs = new ArrayList<>();
     private GameUI gameUI;
     private ClientGameInfo clientGameInfo = null;
+    String url;
 
     public Client(String serverUrl) {
-        facade = new ServerFacade(serverUrl);
-        try {
-            ws = new WebsocketFacade(serverUrl, this);
-        } catch (ResponseException e) {
-            System.out.println(SET_BG_COLOR_RED + "WEBSOCKET SETUP FAILED" + RESET_BG_COLOR);
-        }
+        url = serverUrl;
+        facade = new ServerFacade(url);
         gameUI = new GameUI();
     }
 
@@ -52,13 +49,29 @@ public class Client implements ServerMessageObserver {
                     'register <username> <password> <email>' - Create a new account.
                     'login <username> <password>' - Login to an existing account.""";
         }
+        if (clientGameInfo == null){
+            return """
+                   'help' - Lists command options.
+                   'logout' - Log out of the current session.
+                   'create <game name>' - Create a new chess game.
+                   'list' - List all existing chess games.
+                   'play <game number> <white/black>' - Join a chess game.
+                   'observe <game number>' - Watch a game.""";
+        }
+        if (clientGameInfo.clientColor() == null) { // Observer
+            return """
+                    'help' - Lists command options.
+                    'redraw' - Redraws the chessboard.
+                    'leave' - Leaves the game without resigning.
+                    'highlight <position in chess notation>' - Shows valid moves for the selected piece.""";
+        }
         return """
                 'help' - Lists command options.
-                'logout' - Log out of the current session.
-                'create <game name>' - Create a new chess game.
-                'list' - List all existing chess games.
-                'play' <game number> <white/black> - Join a chess game.
-                'observe <game number> - Watch a game.'""";
+                'redraw' - Redraws the chessboard.
+                'leave' - Leaves the game without resigning.
+                'highlight <position in chess notation>' - Shows valid moves for the selected piece.
+                'move <start position> <end position>' - Makes a move.
+                'resign' - Resigns and ends the game.""";
     }
 
     String login(String[] params) throws ResponseException {
@@ -115,6 +128,7 @@ public class Client implements ServerMessageObserver {
         int gameID = gameNumToGameID(params[0]);
         ChessGame.TeamColor color = strToColor(params[1]);
         facade.joinGame(clientAuthToken, new JoinGameRequest(gameID, color));
+        makeWebsocket();
         // Temporary code for printing a default board:
         ChessBoard board = new ChessBoard();
         board.resetBoard();
@@ -133,24 +147,24 @@ public class Client implements ServerMessageObserver {
     }
 
     // ## In game commands: ##
-    void redraw(){
-
+    void redraw() throws ResponseException {
+        checkInGame();
     }
 
-    void leave(){
-
+    void leave() throws ResponseException {
+        checkInGame();
     }
 
-    void makeMove(){
-
+    void showMoves() throws ResponseException {
+        checkInGame();
     }
 
-    void resign(){
-
+    void makeMove() throws ResponseException {
+        checkPlayer();
     }
 
-    void showMoves(){
-
+    void resign() throws ResponseException {
+        checkPlayer();
     }
 
     // ## Helper methods: ##
@@ -189,6 +203,13 @@ public class Client implements ServerMessageObserver {
         }
     }
 
+    private void checkPlayer() throws ResponseException {
+        checkInGame();
+        if(clientGameInfo.clientColor() == null){
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Must be a player.");
+        }
+    }
+
     private String userSlotString(String username){
         if (username != null){
             return username;
@@ -203,5 +224,13 @@ public class Client implements ServerMessageObserver {
             return ChessGame.TeamColor.BLACK;
         }
         throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Team color must be 'black' or 'white'.");
+    }
+
+    private void makeWebsocket(){
+        try {
+            ws = new WebsocketFacade(url, this);
+        } catch (ResponseException e) {
+            System.out.println(SET_BG_COLOR_RED + "WEBSOCKET SETUP FAILED" + RESET_BG_COLOR);
+        }
     }
 }

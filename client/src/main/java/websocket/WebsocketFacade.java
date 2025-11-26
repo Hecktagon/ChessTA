@@ -49,7 +49,7 @@ public class WebsocketFacade extends Endpoint{
         }
     }
 
-    public void userCommand(UserGameCommand userGameCommand) throws ResponseException {
+    public void sendWsCommand(UserGameCommand userGameCommand) throws ResponseException {
         try {
             this.session.getBasicRemote().sendText(gson.toJson(userGameCommand));
         } catch (IOException ex) {
@@ -57,7 +57,7 @@ public class WebsocketFacade extends Endpoint{
         }
     }
 
-    public void makeMove(MakeMoveCommand makeMoveCommand) throws ResponseException {
+    public void sendWsMakeMove(MakeMoveCommand makeMoveCommand) throws ResponseException {
         try {
             this.session.getBasicRemote().sendText(gson.toJson(makeMoveCommand));
         } catch (IOException ex) {

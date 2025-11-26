@@ -70,7 +70,7 @@ public class WebsocketHandler  implements WsConnectHandler, WsMessageHandler, Ws
         gameDAO.updateGame(gameData);
         connections.gameBroadcast(command.getGameID(), new LoadGameMessage(gameData.game()), null);
         connections.gameBroadcast(command.getGameID(), new NotificationMessage(
-                username + " made move " + command.getMove().toString()), null);
+                username + " made move " + command.getMove().toString()), session);
     }
 
     private void playerLeaves(Session session, UserGameCommand command) throws ResponseException, IOException{
