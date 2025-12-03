@@ -2,12 +2,15 @@ package client;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import chess.ChessMove;
 import dataobjects.*;
 import errors.ResponseException;
 import server.ServerFacade;
 import ui.GameUI;
 import websocket.ServerMessageObserver;
 import websocket.WebsocketFacade;
+import websocket.commands.MakeMoveCommand;
+import websocket.commands.UserGameCommand;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -149,22 +152,29 @@ public class Client implements ServerMessageObserver {
     // ## In game commands: ##
     void redraw() throws ResponseException {
         checkInGame();
+        printClientBoard();
     }
 
     void leave() throws ResponseException {
         checkInGame();
+        sendCommand(UserGameCommand.CommandType.LEAVE, null);
+        clientGameInfo = null;
     }
 
-    void showMoves() throws ResponseException {
+    void showMoves(String [] params) throws ResponseException {
         checkInGame();
+
     }
 
-    void makeMove() throws ResponseException {
+    void makeMove(String[] params) throws ResponseException {
         checkPlayer();
+        ChessMove move = new ChessMove(null, null, null);
+        sendCommand(UserGameCommand.CommandType.MAKE_MOVE, move);
     }
 
     void resign() throws ResponseException {
         checkPlayer();
+        sendCommand(UserGameCommand.CommandType.RESIGN, null);
     }
 
     // ## Helper methods: ##
@@ -231,6 +241,24 @@ public class Client implements ServerMessageObserver {
             ws = new WebsocketFacade(url, this);
         } catch (ResponseException e) {
             System.out.println(SET_BG_COLOR_RED + "WEBSOCKET SETUP FAILED" + RESET_BG_COLOR);
+        }
+    }
+
+    private void printClientBoard(){
+        ChessGame.TeamColor printColor = clientGameInfo.clientColor() == null ?
+                ChessGame.TeamColor.WHITE : clientGameInfo.clientColor();
+        System.out.println(gameUI.gameToUi(clientGameInfo.clientGame().getBoard(), printColor));
+    }
+
+    private void sendCommand(UserGameCommand.CommandType type, ChessMove move) throws ResponseException {
+        if(type.equals(UserGameCommand.CommandType.MAKE_MOVE)){
+            MakeMoveCommand moveCommand = new MakeMoveCommand(
+                    move, clientAuthToken, clientGameInfo.gameID(), clientGameInfo.clientColor());
+            ws.sendWsMakeMove(moveCommand);
+        } else {
+            UserGameCommand command = new UserGameCommand(
+                    type, clientAuthToken, clientGameInfo.gameID(), clientGameInfo.clientColor());
+            ws.sendWsCommand(command);
         }
     }
 }
