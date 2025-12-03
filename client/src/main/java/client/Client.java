@@ -166,8 +166,11 @@ public class Client implements ServerMessageObserver {
 
     }
 
-    void makeMove(String[] params) throws ResponseException {
+    String makeMove(String[] params) throws ResponseException {
         checkPlayer();
+        if (clientGameInfo.clientGame().isGameOver()){
+            return "Moves cannot be made after the game is over.";
+        }
         ChessMove move = new ChessMove(null, null, null);
         sendCommand(UserGameCommand.CommandType.MAKE_MOVE, move);
     }
@@ -260,5 +263,28 @@ public class Client implements ServerMessageObserver {
                     type, clientAuthToken, clientGameInfo.gameID(), clientGameInfo.clientColor());
             ws.sendWsCommand(command);
         }
+    }
+
+    private ChessMove stringToMove(String stringMove) {
+
+    }
+
+    private int colToNum(String col) throws ResponseException {
+        int num = switch (col) {
+            case "a" -> 1;
+            case "b" -> 2;
+            case "c" -> 3;
+            case "d" -> 4;
+            case "e" -> 5;
+            case "f" -> 6;
+            case "g" -> 7;
+            case "h" -> 8;
+            default -> 0;
+        };
+        if(num == 0){
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR,
+                    "Incorrect move format, must be in {col}{row}{col}{row} format like so: e2e4");
+        }
+        return num;
     }
 }
