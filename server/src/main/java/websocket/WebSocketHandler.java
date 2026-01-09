@@ -1,6 +1,7 @@
 package websocket;
 
 import chess.ChessGame;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.SQLAuth;
 import dataaccess.SQLGame;
@@ -31,6 +32,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     public void handleConnect(WsConnectContext wsCtx) {
         System.out.println("Websocket connected");
         wsCtx.enableAutomaticPings();
+        try {
+            sqlAuth = new SQLAuth();
+            sqlUser = new SQLUser();
+            sqlGame = new SQLGame();
+        } catch (ResponseException e){
+            System.out.println("WARNING: SQL failed with error: " + e.toString());
+        }
     }
 
     @Override
@@ -43,42 +51,72 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case LEAVE -> leave(command, wsCtx.session);
                 case RESIGN -> resign(command, wsCtx.session);
             }
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        } catch (ResponseException|IOException e) {
+            System.out.println("WARNING: Message failed with error: " + e.toString());
         }
     }
 
     @Override
     public void handleClose(WsCloseContext wsCtx) {
         System.out.println("Websocket closed");
+        sqlAuth = null;
+        sqlUser = null;
+        sqlGame = null;
     }
 
     private void connect(UserGameCommand command, Session session) throws ResponseException, IOException {
-        String auth = command.getAuthToken();
         Integer gameID = command.getGameID();
-        AuthData authData = sqlAuth.getAuth(auth);
+        AuthData authData = sqlAuth.getAuth(command.getAuthToken());
         GameData gameData = sqlGame.getGame(gameID);
         connections.add(gameID, session);
-
         ChessGame game = gameData.game();
 
         // Send the loadGame to the connecting user:
-        session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
+        sendMessage(session, new LoadGameMessage(game));
         // Send the notification of user joining to other game members:
         connections.broadcast(gameID, new NotificationMessage(authData.username() + " joined the game."), session);
     }
 
-    private void makeMove(UserGameCommand command, Session session){}
+    private void makeMove(MakeMoveCommand command, Session session) throws ResponseException, IOException {
+        Integer gameID = command.getGameID();
+        AuthData authData = sqlAuth.getAuth(command.getAuthToken());
+        GameData gameData = sqlGame.getGame(gameID);
+        ChessGame game = gameData.game();
+
+        try {
+            game.makeMove(command.getMove());
+        } catch (InvalidMoveException e) {
+            sendMessage(session, new ErrorMessage("Invalid move"));
+        }
+
+        connections.broadcast(gameID, new NotificationMessage(authData.username() + "made the move" +
+                command.getMove()), session);
+
+        if (game.isInCheckmate(ChessGame.TeamColor.WHITE)) {
+            connections.broadcast(gameID, new NotificationMessage(gameData.whiteUsername()
+                    + "is in checkmate, black wins!"), null);
+            // add logic to end game
+        } else if (game.isInCheckmate(ChessGame.TeamColor.BLACK)) {
+            connections.broadcast(gameID, new NotificationMessage(gameData.blackUsername()
+                    + "is in checkmate, white wins!"), null);
+            // add logic to end game
+        } else if (game.isInCheck(ChessGame.TeamColor.WHITE)){
+            connections.broadcast(gameID, new NotificationMessage(gameData.whiteUsername()
+                    + "is in check!"), null);
+        } else if (game.isInCheck(ChessGame.TeamColor.BLACK)){
+            connections.broadcast(gameID, new NotificationMessage(gameData.blackUsername()
+                    + "is in check!"), null);
+        } else if (game.isInStalemate(ChessGame.TeamColor.WHITE) || game.isInStalemate(ChessGame.TeamColor.BLACK)){
+            connections.broadcast(gameID, new NotificationMessage("Stalemate!"),null);
+            // add logic to end game
+        }
+    }
 
     private void leave(UserGameCommand command, Session session){}
 
     private void resign(UserGameCommand command, Session session){}
 
-//    private void exit(String visitorName, Session session) throws IOException {
-//        var message = String.format("%s left the shop", visitorName);
-//        var notification = new Notification(Notification.Type.DEPARTURE, message);
-//        connections.broadcast(session, notification);
-//        connections.remove(session);
-//    }
-
+    private void sendMessage(Session session, ServerMessage message) throws IOException {
+        session.getRemote().sendString(gson.toJson(message));
+    }
 }
