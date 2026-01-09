@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import dataaccess.SQLAuth;
 import dataaccess.SQLGame;
 import dataaccess.SQLUser;
-import dataobjects.GameData;
+import dataobjects.*;
 import errors.ResponseException;
 import io.javalin.websocket.WsCloseContext;
 import io.javalin.websocket.WsCloseHandler;
@@ -14,9 +14,8 @@ import io.javalin.websocket.WsConnectHandler;
 import io.javalin.websocket.WsMessageContext;
 import io.javalin.websocket.WsMessageHandler;
 import org.eclipse.jetty.websocket.api.Session;
-import websocket.commands.MakeMoveCommand;
-import websocket.commands.UserGameCommand;
-import websocket.messages.ServerMessage;
+import websocket.commands.*;
+import websocket.messages.*;
 
 import java.io.IOException;
 
@@ -57,12 +56,16 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void connect(UserGameCommand command, Session session) throws ResponseException, IOException {
         String auth = command.getAuthToken();
         Integer gameID = command.getGameID();
+        AuthData authData = sqlAuth.getAuth(auth);
         GameData gameData = sqlGame.getGame(gameID);
         connections.add(gameID, session);
 
         ChessGame game = gameData.game();
-        session.getRemote().sendString(new Gson().toJson(game));
-        connections.broadcast(gameID, new );
+
+        // Send the loadGame to the connecting user:
+        session.getRemote().sendString(new Gson().toJson(new LoadGameMessage(game)));
+        // Send the notification of user joining to other game members:
+        connections.broadcast(gameID, new NotificationMessage(authData.username() + " joined the game."), session);
     }
 
     private void makeMove(UserGameCommand command, Session session){}
