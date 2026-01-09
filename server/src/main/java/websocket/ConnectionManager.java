@@ -21,7 +21,7 @@ public class ConnectionManager {
     }
 
     public void remove(Integer gameID, Session session) throws ResponseException {
-        if(!connections.contains(gameID)){
+        if(!connections.containsKey(gameID)){
             throw new ResponseException(ResponseException.Type.SERVER_ERROR, "No such game ID.");
         }
         HashSet<Session> sessions = connections.get(gameID);
