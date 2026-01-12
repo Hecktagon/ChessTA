@@ -69,6 +69,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         Integer gameID = command.getGameID();
         AuthData authData = sqlAuth.getAuth(command.getAuthToken());
         GameData gameData = sqlGame.getGame(gameID);
+        checkValidRequest(authData, gameData, session);
         connections.add(gameID, session);
         ChessGame game = gameData.game();
 
@@ -82,19 +83,17 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         Integer gameID = command.getGameID();
         AuthData authData = sqlAuth.getAuth(command.getAuthToken());
         GameData gameData = sqlGame.getGame(gameID);
+        checkValidRequest(authData, gameData, session);
         ChessGame game = gameData.game();
 
-        ChessGame.TeamColor playerColor = authData.username().equals(gameData.whiteUsername()) ?
-                ChessGame.TeamColor.WHITE: authData.username().equals(gameData.blackUsername()) ?
-                ChessGame.TeamColor.BLACK: null;
-
-        ChessGame.TeamColor enemyColor = playerColor == ChessGame.TeamColor.WHITE ?
-                ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+        ChessGame.TeamColor playerColor = getPlayerColor(authData.username(), gameData);
 
         if (playerColor == null){
             sendMessage(session, new ErrorMessage("Observers cannot make moves"));
             return;
         }
+
+        ChessGame.TeamColor enemyColor = getEnemyColor(playerColor);
 
         if (game.isGameOver()){
             sendMessage(session, new ErrorMessage("The game is over"));
@@ -107,6 +106,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             sendMessage(session, new ErrorMessage("Invalid move"));
             return;
         }
+
+        sqlGame.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(),
+                gameData.blackUsername(), gameData.gameName(), game));
 
         connections.broadcast(gameID, new LoadGameMessage(game), null);
 
@@ -128,7 +130,22 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void leave(UserGameCommand command, Session session) throws ResponseException, IOException {
         Integer gameID = command.getGameID();
         AuthData authData = sqlAuth.getAuth(command.getAuthToken());
+        GameData gameData = sqlGame.getGame(gameID);
+        checkValidRequest(authData, gameData, session);
         connections.remove(gameID, session);
+        GameData newGameData;
+
+        ChessGame.TeamColor playerColor = getPlayerColor(authData.username(), gameData);
+        if (playerColor != null) {
+            if (playerColor.equals(ChessGame.TeamColor.WHITE)){
+                newGameData = new GameData(gameData.gameID(), null,
+                        gameData.blackUsername(), gameData.gameName(), gameData.game());
+            } else {
+                newGameData = new GameData(gameData.gameID(), gameData.whiteUsername(),
+                        null, gameData.gameName(), gameData.game());
+            }
+            sqlGame.updateGame(newGameData);
+        }
 
         // Send the notification of user leaving to other game members:
         connections.broadcast(gameID, new NotificationMessage(authData.username() + " left the game."), session);
@@ -138,13 +155,46 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         Integer gameID = command.getGameID();
         AuthData authData = sqlAuth.getAuth(command.getAuthToken());
         GameData gameData = sqlGame.getGame(gameID);
+        checkValidRequest(authData, gameData, session);
         ChessGame game = gameData.game();
 
+        ChessGame.TeamColor playerColor = getPlayerColor(authData.username(), gameData);
+
+        if (playerColor == null){
+            sendMessage(session, new ErrorMessage("Observers cannot resign"));
+            return;
+        }
+
+        ChessGame.TeamColor enemyColor = getEnemyColor(playerColor);
+
         game.setGameOver(true);
-        connections.broadcast(gameID, new NotificationMessage(authData.username() + " resigned!"), session);
+        connections.broadcast(gameID, new NotificationMessage(authData.username() + " resigned, " +
+                enemyColor.toString().toLowerCase() + " wins!"), session);
     }
 
     private void sendMessage(Session session, ServerMessage message) throws IOException {
         session.getRemote().sendString(gson.toJson(message));
+    }
+
+    private ChessGame.TeamColor getPlayerColor(String username, GameData gameData){
+       return username.equals(gameData.whiteUsername()) ?
+                ChessGame.TeamColor.WHITE: username.equals(gameData.blackUsername()) ?
+                ChessGame.TeamColor.BLACK: null;
+    }
+
+    private ChessGame.TeamColor getEnemyColor(ChessGame.TeamColor playerColor ) {
+        return playerColor == ChessGame.TeamColor.WHITE ?
+                ChessGame.TeamColor.BLACK : ChessGame.TeamColor.WHITE;
+    }
+
+    private void checkValidRequest(AuthData authData, GameData gameData, Session session) throws ResponseException, IOException {
+        if(authData == null){
+            sendMessage(session, new ErrorMessage("Unauthorized"));
+            throw new ResponseException(ResponseException.Type.UNAUTHORIZED);
+        }
+        if(gameData == null){
+            sendMessage(session, new ErrorMessage("Not a valid game"));
+            throw new ResponseException(ResponseException.Type.BAD_REQUEST);
+        }
     }
 }
