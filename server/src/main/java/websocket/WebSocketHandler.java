@@ -28,6 +28,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private SQLAuth sqlAuth;
     private SQLUser sqlUser;
     private SQLGame sqlGame;
+    private Integer gameID;
+    private AuthData authData;
+    private GameData gameData;
+    private ChessGame game;
 
     @Override
     public void handleConnect(WsConnectContext wsCtx) {
@@ -46,6 +50,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     public void handleMessage(WsMessageContext wsCtx) {
         try {
             UserGameCommand command = new Gson().fromJson(wsCtx.message(), UserGameCommand.class);
+
+            gameID = command.getGameID();
+            authData = sqlAuth.getAuth(command.getAuthToken());
+            gameData = sqlGame.getGame(gameID);
+            checkValidRequest(authData, gameData, wsCtx.session);
+            game = gameData.game();
+
             switch (command.getCommandType()) {
                 case CONNECT -> connect(command, wsCtx.session);
                 case MAKE_MOVE -> makeMove(gson.fromJson(wsCtx.message(), MakeMoveCommand.class), wsCtx.session);
@@ -63,15 +74,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         sqlAuth = null;
         sqlUser = null;
         sqlGame = null;
+        gameID = null;
+        authData = null;
+        gameData = null;
+        game = null;
     }
 
     private void connect(UserGameCommand command, Session session) throws ResponseException, IOException {
-        Integer gameID = command.getGameID();
-        AuthData authData = sqlAuth.getAuth(command.getAuthToken());
-        GameData gameData = sqlGame.getGame(gameID);
-        checkValidRequest(authData, gameData, session);
         connections.add(gameID, session);
-        ChessGame game = gameData.game();
 
         // Send the loadGame to the connecting user:
         sendMessage(session, new LoadGameMessage(game));
@@ -80,16 +90,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void makeMove(MakeMoveCommand command, Session session) throws ResponseException, IOException {
-        Integer gameID = command.getGameID();
-        AuthData authData = sqlAuth.getAuth(command.getAuthToken());
-        GameData gameData = sqlGame.getGame(gameID);
-        checkValidRequest(authData, gameData, session);
-        ChessGame game = gameData.game();
-
         ChessGame.TeamColor playerColor = getPlayerColor(authData.username(), gameData);
 
         if (playerColor == null){
-            sendMessage(session, new ErrorMessage("Observers cannot make moves"));
+            sendMessage(session, new ErrorMessage("Observers can't make moves"));
             return;
         }
 
@@ -100,6 +104,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             return;
         }
 
+        if (!game.getTeamTurn().equals(playerColor)){
+            sendMessage(session, new ErrorMessage("Can't move enemy pieces"));
+            return;
+        }
+
+        // Make the move
         try {
             game.makeMove(command.getMove());
         } catch (InvalidMoveException e) {
@@ -128,11 +138,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
     private void leave(UserGameCommand command, Session session) throws ResponseException, IOException {
-        Integer gameID = command.getGameID();
-        AuthData authData = sqlAuth.getAuth(command.getAuthToken());
-        GameData gameData = sqlGame.getGame(gameID);
-        checkValidRequest(authData, gameData, session);
-        connections.remove(gameID, session);
         GameData newGameData;
 
         ChessGame.TeamColor playerColor = getPlayerColor(authData.username(), gameData);
@@ -147,17 +152,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             sqlGame.updateGame(newGameData);
         }
 
+        // Remove user from game:
+        connections.remove(gameID, session);
         // Send the notification of user leaving to other game members:
         connections.broadcast(gameID, new NotificationMessage(authData.username() + " left the game."), session);
     }
 
     private void resign(UserGameCommand command, Session session) throws ResponseException, IOException {
-        Integer gameID = command.getGameID();
-        AuthData authData = sqlAuth.getAuth(command.getAuthToken());
-        GameData gameData = sqlGame.getGame(gameID);
-        checkValidRequest(authData, gameData, session);
-        ChessGame game = gameData.game();
-
         ChessGame.TeamColor playerColor = getPlayerColor(authData.username(), gameData);
 
         if (playerColor == null){
@@ -165,11 +166,20 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             return;
         }
 
+        if (game.isGameOver()){
+            sendMessage(session, new ErrorMessage("Can't resign, the game is already over."));
+            return;
+        }
+
         ChessGame.TeamColor enemyColor = getEnemyColor(playerColor);
 
         game.setGameOver(true);
+
+        sqlGame.updateGame(new GameData(gameData.gameID(), gameData.whiteUsername(),
+                gameData.blackUsername(), gameData.gameName(), game));
+
         connections.broadcast(gameID, new NotificationMessage(authData.username() + " resigned, " +
-                enemyColor.toString().toLowerCase() + " wins!"), session);
+                enemyColor.toString().toLowerCase() + " wins!"), null);
     }
 
     private void sendMessage(Session session, ServerMessage message) throws IOException {

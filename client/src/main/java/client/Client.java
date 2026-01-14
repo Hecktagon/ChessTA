@@ -2,44 +2,83 @@ package client;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import com.google.gson.Gson;
 import dataobjects.*;
 import errors.ResponseException;
 import server.ServerFacade;
 import ui.GameUI;
+import websocket.NotificationHandler;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
+import websocket.messages.NotificationMessage;
+import websocket.messages.ServerMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import static ui.EscapeSequences.*;
 
-public class Client {
+public class Client implements NotificationHandler {
     ServerFacade facade;
     private String clientUsername = null;
     private String clientAuthToken = null;
+    private ClientGameInfo clientGame = null;
     private ArrayList<Integer> gameIDs = new ArrayList<>();
     private GameUI gameUI;
+    private Gson gson = new Gson();
 
     public Client(ServerFacade serverFacade){
         facade = serverFacade;
         gameUI = new GameUI();
     }
 
+    @Override
+    public void notify(NotificationMessage message) {
+        System.out.println(message.getMessage());
+    }
+
+    @Override
+    public void error(ErrorMessage message) {
+        System.out.println(SET_TEXT_COLOR_RED + message.getMessage() + RESET_TEXT_COLOR);
+    }
+
+    @Override
+    public void loadGame(LoadGameMessage gameMessage){
+        if(clientGame.color() != null) {
+            System.out.print(gameUI.gameToUi(gameMessage.getGame().getBoard(), clientGame.color()));
+        } else {
+            System.out.print(gameUI.gameToUi(gameMessage.getGame().getBoard(), ChessGame.TeamColor.WHITE));
+        }
+    }
+
     // ###   package-private methods:   ###
     String help(){
+        // not logged in
         if (clientAuthToken == null) {
             return """
                     'help' - Lists command options.
                     'quit' - Exit the program.
                     'register <username> <password> <email>' - Create a new account.
                     'login <username> <password>' - Login to an existing account.""";
+        // not in game
+        } if (clientGame == null) {
+            return """
+                    'help' - Lists command options.
+                    'logout' - Log out of the current session.
+                    'create <game name>' - Create a new chess game.
+                    'list' - List all existing chess games.
+                    'play' <game number> <white/black> - Join a chess game.
+                    'observe <game number> - Watch a game.'""";
+        // not a player
+        } if (clientGame.color() == null) {
+            return """
+                    
+                    """;
         }
+        // player
         return """
-                'help' - Lists command options.
-                'logout' - Log out of the current session.
-                'create <game name>' - Create a new chess game.
-                'list' - List all existing chess games.
-                'play' <game number> <white/black> - Join a chess game.
-                'observe <game number> - Watch a game.'""";
+                
+                """;
     }
 
     String login(String[] params) throws ResponseException {
