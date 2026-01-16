@@ -12,8 +12,8 @@ public class Repl {
     private final Client client;
 
     public Repl(String serverUrl){
-        ServerFacade serverFacade = new ServerFacade(serverUrl);
-        client = new Client(serverFacade);
+
+        client = new Client(serverUrl);
     }
 
     public void run(){

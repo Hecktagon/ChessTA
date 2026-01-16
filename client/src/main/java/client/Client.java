@@ -8,6 +8,8 @@ import errors.ResponseException;
 import server.ServerFacade;
 import ui.GameUI;
 import websocket.NotificationHandler;
+import websocket.WebSocketFacade;
+import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
@@ -19,16 +21,23 @@ import java.util.Collection;
 import static ui.EscapeSequences.*;
 
 public class Client implements NotificationHandler {
-    ServerFacade facade;
+    private final ServerFacade facade;
+    private WebSocketFacade wsFacade;
     private String clientUsername = null;
     private String clientAuthToken = null;
     private ClientGameInfo clientGame = null;
     private ArrayList<Integer> gameIDs = new ArrayList<>();
     private GameUI gameUI;
+    private ChessBoard currentBoard;
     private Gson gson = new Gson();
 
-    public Client(ServerFacade serverFacade){
-        facade = serverFacade;
+    public Client(String url){
+        facade = new ServerFacade(url);
+        try {
+            wsFacade = new WebSocketFacade(url, this);
+        } catch (ResponseException e){
+            System.out.println("Websocket failed with error: " + e);
+        }
         gameUI = new GameUI();
     }
 
@@ -44,11 +53,13 @@ public class Client implements NotificationHandler {
 
     @Override
     public void loadGame(LoadGameMessage gameMessage){
+        ChessBoard board = gameMessage.getGame().getBoard();
         if(clientGame.color() != null) {
-            System.out.print(gameUI.gameToUi(gameMessage.getGame().getBoard(), clientGame.color()));
+            System.out.print(gameUI.gameToUi(board, clientGame.color()));
         } else {
-            System.out.print(gameUI.gameToUi(gameMessage.getGame().getBoard(), ChessGame.TeamColor.WHITE));
+            System.out.print(gameUI.gameToUi(board, ChessGame.TeamColor.WHITE));
         }
+        currentBoard = board;
     }
 
     // ###   package-private methods:   ###
@@ -72,12 +83,20 @@ public class Client implements NotificationHandler {
         // not a player
         } if (clientGame.color() == null) {
             return """
-                    
+                    'help' - Lists command options.
+                    'redraw' - Redraws the chess board.
+                    'leave' - Leaves the game.
+                    'highlight <position>' - Given a position in proper syntax (Ex. e4) shows the moves for a piece
                     """;
         }
         // player
         return """
-                
+                'help' - Lists command options.
+                'redraw' - Redraws the chess board.
+                'leave' - Leaves the game.
+                'move <start position> <end position>' - Makes a chess move given moves in proper syntax (Ex. e2 e4).
+                'resign' - Forfeits the game.
+                'highlight <position>' - Given a position in proper syntax (Ex. e4) shows the moves for that piece.
                 """;
     }
 
@@ -134,10 +153,12 @@ public class Client implements NotificationHandler {
         int gameID = gameNumToGameID(params[0]);
         ChessGame.TeamColor color = strToColor(params[1]);
         facade.joinGame(clientAuthToken, new JoinGameRequest(gameID, color));
-        // Temporary code for printing a default board:
-        ChessBoard board = new ChessBoard();
-        board.resetBoard();
-        return String.format("You joined game %s as %s.", params[0], params[1]) + "\n" + gameUI.gameToUi(board, color);
+
+        // connect to the game via websocket and show that the user is in a game
+        wsFacade.sendCommand(new UserGameCommand(UserGameCommand.CommandType.CONNECT, clientAuthToken, gameID));
+        clientGame = new ClientGameInfo(gameID, color);
+
+        return String.format("\nYou joined game %s as %s.", params[0], params[1]);
     }
 
     String observeGame(String[] params) throws ResponseException {
@@ -150,6 +171,8 @@ public class Client implements NotificationHandler {
         return String.format("You are observing game %s.", params[0]) + "\n" +
                 gameUI.gameToUi(board, ChessGame.TeamColor.WHITE);
     }
+
+
 
     // gracefully handles a non integer input from user.
     private int gameNumToGameID(String stringNum) throws ResponseException {
