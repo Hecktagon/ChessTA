@@ -2,6 +2,7 @@ package client;
 
 import chess.ChessBoard;
 import chess.ChessGame;
+import chess.ChessPiece;
 import com.google.gson.Gson;
 import dataobjects.*;
 import errors.ResponseException;
@@ -154,7 +155,7 @@ public class Client implements NotificationHandler {
         ChessGame.TeamColor color = strToColor(params[1]);
         facade.joinGame(clientAuthToken, new JoinGameRequest(gameID, color));
 
-        // connect to the game via websocket and show that the user is in a game
+        // connect to the game via websocket and show that the user is playing a game
         wsFacade.sendCommand(new UserGameCommand(UserGameCommand.CommandType.CONNECT, clientAuthToken, gameID));
         clientGame = new ClientGameInfo(gameID, color);
 
@@ -165,14 +166,31 @@ public class Client implements NotificationHandler {
         checkLoggedIn();
         checkParams(params, 1);
         int gameID = gameNumToGameID(params[0]);
-        // Temporary code for printing a default board:
-        ChessBoard board = new ChessBoard();
-        board.resetBoard();
-        return String.format("You are observing game %s.", params[0]) + "\n" +
-                gameUI.gameToUi(board, ChessGame.TeamColor.WHITE);
+
+        wsFacade.sendCommand(new UserGameCommand(UserGameCommand.CommandType.CONNECT, clientAuthToken, gameID));
+        clientGame = new ClientGameInfo(gameID, null);
+
+        return String.format("You are observing game %s.", params[0]);
     }
 
+    String redrawBoard() throws ResponseException {
+        checkInGame();
+        return gameUI.gameToUi(currentBoard, clientGame.color());
+    }
 
+    String leaveGame() throws ResponseException {
+        checkInGame();
+        wsFacade.sendCommand(new UserGameCommand(UserGameCommand.CommandType.LEAVE,
+                clientAuthToken, clientGame.gameID()));
+        clientGame = null;
+        return "You left the game.";
+    }
+
+    String makeMove(String[] params) throws ResponseException {
+        checkIsPlayer();
+        //TODO: implement this.
+        return null;
+    }
 
     // gracefully handles a non integer input from user.
     private int gameNumToGameID(String stringNum) throws ResponseException {
@@ -200,6 +218,20 @@ public class Client implements NotificationHandler {
     private void checkLoggedIn() throws ResponseException {
         if (clientAuthToken == null) {
             throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Please log in first.");
+        }
+    }
+
+    private void checkInGame() throws ResponseException {
+        checkLoggedIn();
+        if (clientGame == null){
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Please join a game first.");
+        }
+    }
+
+    private void checkIsPlayer() throws ResponseException{
+        checkInGame();
+        if (clientGame.color() == null){
+            throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Must be a player.");
         }
     }
 
