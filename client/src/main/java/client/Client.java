@@ -1,8 +1,6 @@
 package client;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
+import chess.*;
 import com.google.gson.Gson;
 import dataobjects.*;
 import errors.ResponseException;
@@ -10,6 +8,7 @@ import server.ServerFacade;
 import ui.GameUI;
 import websocket.NotificationHandler;
 import websocket.WebSocketFacade;
+import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
 import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
@@ -18,6 +17,7 @@ import websocket.messages.ServerMessage;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Scanner;
 
 import static ui.EscapeSequences.*;
 
@@ -188,7 +188,15 @@ public class Client implements NotificationHandler {
 
     String makeMove(String[] params) throws ResponseException {
         checkIsPlayer();
-        //TODO: implement this.
+        checkParams(params, 2);
+
+        ChessPosition startPos = strToPos(params[0]);
+        ChessPosition endPos = strToPos(params[1]);
+        ChessPiece.PieceType promo = getPromoPiece(startPos, endPos);
+
+        wsFacade.sendCommand(new MakeMoveCommand(clientAuthToken, clientGame.gameID(),
+                new ChessMove(startPos, endPos, promo)));
+
         return null;
     }
 
@@ -250,4 +258,61 @@ public class Client implements NotificationHandler {
         }
         throw new ResponseException(ResponseException.Type.CLIENT_ERROR, "Team color must be 'black' or 'white'.");
     }
-}
+
+    private ChessPosition strToPos(String strPos) throws ResponseException {
+        ResponseException badFormat = new ResponseException(ResponseException.Type.CLIENT_ERROR, "Invalid input for chess position. " +
+                "Must follow chess syntax like 'E4'.");
+        if (strPos.length() != 2){
+            throw badFormat;
+        }
+
+        int col = switch(strPos.substring(0, 1).toLowerCase()){
+            case "a" -> 1;
+            case "b" -> 2;
+            case "c" -> 3;
+            case "d" -> 4;
+            case "e" -> 5;
+            case "f" -> 6;
+            case "g" -> 7;
+            case "h" -> 8;
+            default -> throw badFormat;
+        };
+
+        int row;
+        try {
+            row = Integer.parseInt(strPos.substring(1, 2));
+        } catch(NumberFormatException e){
+            throw badFormat;
+        }
+
+        return new ChessPosition(row, col);
+    }
+
+    private ChessPiece.PieceType getPromoPiece(ChessPosition start, ChessPosition end){
+        ChessPiece currPiece = currentBoard.getPiece(start);
+        if(currPiece != null && currPiece.getPieceType().equals(ChessPiece.PieceType.PAWN)){
+            if ((currPiece.getTeamColor().equals(ChessGame.TeamColor.WHITE) && end.getRow() == 8)
+            || (currPiece.getTeamColor().equals(ChessGame.TeamColor.BLACK) && end.getRow() == 1)){
+                return strToPromo();
+                }
+            }
+        return null;
+    }
+
+    private ChessPiece.PieceType strToPromo(){
+        while (true) {
+            System.out.print("Enter promotion piece 'Q', 'R', 'B', or 'N': ");
+            Scanner scanner = new Scanner(System.in);
+            String userInput = scanner.nextLine();
+            switch (userInput.toLowerCase()){
+                case "q" -> {return ChessPiece.PieceType.QUEEN;}
+                case "r" -> {return ChessPiece.PieceType.ROOK;}
+                case "b" -> {return ChessPiece.PieceType.BISHOP;}
+                case "n" -> {return ChessPiece.PieceType.KNIGHT;}
+                default -> System.out.println(SET_TEXT_COLOR_RED +
+                        "Invalid promotion piece, must be 'Q', 'R', 'B', or 'N'." + RESET_TEXT_COLOR);
+            }
+        }
+    }
+    }
+
