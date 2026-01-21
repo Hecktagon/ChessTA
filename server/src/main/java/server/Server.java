@@ -8,10 +8,12 @@ import websocket.WebSocketHandler;
 public class Server {
 
     private final Javalin javalin;
+    Handler handler;
+    WebSocketHandler wsHandler;
 
     public Server() {
-        Handler handler = new Handler();
-        WebSocketHandler wsHandler = new WebSocketHandler();
+        handler = new Handler();
+        wsHandler = new WebSocketHandler();
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .post("/user", handler::handleRegister)
@@ -38,5 +40,14 @@ public class Server {
 
     public void stop() {
         javalin.stop();
+    }
+
+    public void clear(){
+        try {
+            handler.handleClear(null);
+            System.out.println("Database cleared!");
+        } catch(ResponseException e){
+            System.out.println("Clear failed with: " + e);
+        }
     }
 }

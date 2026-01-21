@@ -54,6 +54,11 @@ public class Repl {
                 case "play" -> client.playGame(params);
                 case "observe" -> client.observeGame(params);
                 case "help" -> client.help();
+                case "redraw" -> client.redrawBoard();
+                case "leave" -> client.leaveGame();
+                case "move" -> client.makeMove(params);
+                case "resign" -> client.resign();
+                case "highlight" -> client.highlightMoves(params);
                 default -> "Unrecognized command, try:\n" + client.help();
             };
         } catch (ResponseException e){
@@ -64,7 +69,7 @@ public class Repl {
         }
     }
 
-    private void printPrompt() {
+    public static void printPrompt() {
         System.out.print(RESET_TEXT_COLOR + ">>> " + SET_TEXT_COLOR_BLUE);
     }
 }

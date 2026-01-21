@@ -33,17 +33,21 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private GameData gameData;
     private ChessGame game;
 
-    @Override
-    public void handleConnect(WsConnectContext wsCtx) {
-        System.out.println("Websocket connected");
-        wsCtx.enableAutomaticPings();
+    public WebSocketHandler(){
         try {
             sqlAuth = new SQLAuth();
             sqlUser = new SQLUser();
             sqlGame = new SQLGame();
+            System.out.println("SQL websocket established.");
         } catch (ResponseException e){
-            System.out.println("WARNING: SQL failed with error: " + e.toString());
+            System.out.println("WARNING: SQL failed with error: " + e);
         }
+    }
+
+    @Override
+    public void handleConnect(WsConnectContext wsCtx) {
+        System.out.println("Websocket connected");
+        wsCtx.enableAutomaticPings();
     }
 
     @Override
@@ -64,16 +68,13 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 case RESIGN -> resign(command, wsCtx.session);
             }
         } catch (ResponseException|IOException e) {
-            System.out.println("WARNING: Message failed with error: " + e.toString());
+            System.out.println("WARNING: Message failed with error: " + e);
         }
     }
 
     @Override
     public void handleClose(WsCloseContext wsCtx) {
         System.out.println("Websocket closed");
-        sqlAuth = null;
-        sqlUser = null;
-        sqlGame = null;
         gameID = null;
         authData = null;
         gameData = null;
@@ -82,9 +83,17 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void connect(UserGameCommand command, Session session) throws ResponseException, IOException {
         connections.add(gameID, session);
+        ChessGame.TeamColor playerColor = getPlayerColor(authData.username(), gameData);
 
         // Send the loadGame to the connecting user:
         sendMessage(session, new LoadGameMessage(game));
+
+        // send observing notification if observer.
+        if (playerColor == null){
+            connections.broadcast(gameID, new NotificationMessage(authData.username() + " is observing the game."), session);
+            return;
+        }
+
         // Send the notification of user joining to other game members:
         connections.broadcast(gameID, new NotificationMessage(authData.username() + " joined the game."), session);
     }
@@ -99,13 +108,16 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         ChessGame.TeamColor enemyColor = getEnemyColor(playerColor);
 
+        String enemyUsername = enemyColor.equals(ChessGame.TeamColor.WHITE) ?
+                gameData.whiteUsername() : gameData.blackUsername();
+
         if (game.isGameOver()){
             sendMessage(session, new ErrorMessage("The game is over"));
             return;
         }
 
         if (!game.getTeamTurn().equals(playerColor)){
-            sendMessage(session, new ErrorMessage("Can't move enemy pieces"));
+            sendMessage(session, new ErrorMessage("Can't move out of turn"));
             return;
         }
 
@@ -122,14 +134,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         connections.broadcast(gameID, new LoadGameMessage(game), null);
 
-        connections.broadcast(gameID, new NotificationMessage(authData.username() + "made the move" +
+        connections.broadcast(gameID, new NotificationMessage(authData.username() + " made the move " +
                 command.getMove()), session);
 
         if (game.isInCheckmate(enemyColor)) {
-            connections.broadcast(gameID, new NotificationMessage("Player " + enemyColor.toString().toLowerCase()
-                    + "is in checkmate, " + playerColor.toString().toLowerCase() + " wins!"), null);
+            connections.broadcast(gameID, new NotificationMessage("Player " + enemyUsername
+                    + " is in checkmate, " + playerColor.toString().toLowerCase() + " wins!"), null);
         } else if (game.isInCheck(enemyColor)){
-            connections.broadcast(gameID, new NotificationMessage("Player " + enemyColor.toString().toLowerCase()
+            connections.broadcast(gameID, new NotificationMessage("Player " + enemyUsername
                     + " is in check!"), null);
         } else if (game.isInStalemate(ChessGame.TeamColor.WHITE) || game.isInStalemate(ChessGame.TeamColor.BLACK)){
             connections.broadcast(gameID, new NotificationMessage("Stalemate!"),null);

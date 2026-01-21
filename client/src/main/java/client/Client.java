@@ -44,22 +44,26 @@ public class Client implements NotificationHandler {
 
     @Override
     public void notify(NotificationMessage message) {
-        System.out.println(message.getMessage());
+        System.out.println("\n" + message.getMessage());
+        Repl.printPrompt();
     }
 
     @Override
     public void error(ErrorMessage message) {
-        System.out.println(SET_TEXT_COLOR_RED + message.getMessage() + RESET_TEXT_COLOR);
+        System.out.println("\n" + SET_TEXT_COLOR_RED + message.getMessage() + RESET_TEXT_COLOR);
+        Repl.printPrompt();
     }
 
     @Override
     public void loadGame(LoadGameMessage gameMessage){
         ChessBoard board = gameMessage.getGame().getBoard();
+        System.out.println();
         if(clientGame.color() != null) {
             System.out.print(gameUI.gameToUi(board, clientGame.color()));
         } else {
             System.out.print(gameUI.gameToUi(board, ChessGame.TeamColor.WHITE));
         }
+        Repl.printPrompt();
         currentBoard = board;
     }
 
@@ -193,11 +197,12 @@ public class Client implements NotificationHandler {
         ChessPosition startPos = strToPos(params[0]);
         ChessPosition endPos = strToPos(params[1]);
         ChessPiece.PieceType promo = getPromoPiece(startPos, endPos);
+        ChessMove move = new ChessMove(startPos, endPos, promo);
 
         wsFacade.sendCommand(new MakeMoveCommand(clientAuthToken, clientGame.gameID(),
-                new ChessMove(startPos, endPos, promo)));
+                move));
 
-        return null;
+        return "";
     }
 
     String resign() throws ResponseException {
@@ -209,7 +214,7 @@ public class Client implements NotificationHandler {
         if(response.equalsIgnoreCase("y")){
             wsFacade.sendCommand(new UserGameCommand(UserGameCommand.CommandType.RESIGN,
                     clientAuthToken, clientGame.gameID()));
-            return null;
+            return "";
         }
         return "Resign aborted.";
     }

@@ -66,6 +66,8 @@ public class GameUI {
                 String bgColor;
                 if(highlightSquares.contains(currPos)){
                     bgColor = whiteTile ? SET_BG_COLOR_GREEN : SET_BG_COLOR_DARK_GREEN;
+                } else if (currPos.equals(highlightPos)){
+                    bgColor = SET_BG_COLOR_BLUE;
                 } else {
                     bgColor = whiteTile ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY;
                 }
