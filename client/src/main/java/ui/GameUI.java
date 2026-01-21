@@ -1,11 +1,10 @@
 package ui;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 
 import static ui.EscapeSequences.*;
@@ -16,6 +15,13 @@ public class GameUI {
     private static final String RESET = RESET_BG_COLOR + RESET_TEXT_COLOR + RESET_TEXT_BOLD_FAINT;
     private final String[] whitePieces = {WHITE_BISHOP, WHITE_KING, WHITE_KNIGHT, WHITE_PAWN, WHITE_QUEEN, WHITE_ROOK};
     private final String[] blackPieces = {BLACK_BISHOP, BLACK_KING, BLACK_KNIGHT, BLACK_PAWN, BLACK_QUEEN, BLACK_ROOK};
+    private ChessPosition highlightPos = null;
+
+    public GameUI () {}
+
+    public GameUI (ChessPosition highlightPos){
+        this.highlightPos = highlightPos;
+    }
 
     // takes in a chessboard and team color, returns a pretty UI string of the board from that color's perspective.
     public String gameToUi(ChessBoard board, ChessGame.TeamColor team){
@@ -46,14 +52,23 @@ public class GameUI {
         ArrayList<String> boardSquares = new ArrayList<>();
         boolean whiteTile = true;
 
+        HashSet<ChessPosition> highlightSquares =  highlightPos == null ?
+                new HashSet<>() : getEndPositions(highlightPos, board);
+
         // first do the top column labels:
         addColumnLabel(boardSquares);
         for (int row = 8; row > 0; row--){
             boardSquares.add(SET_BG_COLOR_NAVY + SET_TEXT_COLOR_VERY_LIGHT_GREY + " " + rows[row-1] + " " + RESET);
             for (int col = 1; col < 9; col++){
-                ChessPiece piece = board.getPiece(new ChessPosition(row, col));
+                ChessPosition currPos = new ChessPosition(row, col);
+                ChessPiece piece = board.getPiece(currPos);
                 String pieceUI = pieceToUI(piece);
-                String bgColor = whiteTile ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY;
+                String bgColor;
+                if(highlightSquares.contains(currPos)){
+                    bgColor = whiteTile ? SET_BG_COLOR_GREEN : SET_BG_COLOR_DARK_GREEN;
+                } else {
+                    bgColor = whiteTile ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY;
+                }
                 boardSquares.add(bgColor + SET_TEXT_COLOR_BLACK +  pieceUI);
                 whiteTile = !whiteTile;
             }
@@ -72,6 +87,19 @@ public class GameUI {
             boardSquares.add(SET_BG_COLOR_NAVY + SET_TEXT_COLOR_VERY_LIGHT_GREY + " " + column + " " + RESET);
         }
         boardSquares.add(SET_BG_COLOR_NAVY + EMPTY + RESET);
+    }
+
+    private HashSet<ChessPosition> getEndPositions(ChessPosition myPosition, ChessBoard board){
+        ChessGame tempGame = new ChessGame();
+        tempGame.setBoard(board);
+        Collection<ChessMove> moves = tempGame.validMoves(myPosition);
+        HashSet<ChessPosition> positions = new HashSet<>();
+
+        for(ChessMove move : moves) {
+            positions.add(move.getEndPosition());
+        }
+
+        return positions;
     }
 
     // converts a ChessPiece into its corresponding UI element

@@ -214,6 +214,14 @@ public class Client implements NotificationHandler {
         return "Resign aborted.";
     }
 
+    String highlightMoves(String[] params) throws ResponseException {
+        checkInGame();
+        checkParams(params, 1);
+        ChessPosition highlightPos = strToPos(params[0]);
+        GameUI highlightUI = new GameUI(highlightPos);
+        return highlightUI.gameToUi(currentBoard, clientGame.color());
+    }
+
     // gracefully handles a non integer input from user.
     private int gameNumToGameID(String stringNum) throws ResponseException {
         int gameNum;
