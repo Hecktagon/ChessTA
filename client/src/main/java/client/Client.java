@@ -200,6 +200,20 @@ public class Client implements NotificationHandler {
         return null;
     }
 
+    String resign() throws ResponseException {
+        checkIsPlayer();
+        Scanner scanner = new Scanner(System.in);
+        System.out.print(SET_TEXT_COLOR_YELLOW + "Are you sure you want to resign? (y/n): " + RESET_TEXT_COLOR);
+        String response = scanner.nextLine();
+
+        if(response.equalsIgnoreCase("y")){
+            wsFacade.sendCommand(new UserGameCommand(UserGameCommand.CommandType.RESIGN,
+                    clientAuthToken, clientGame.gameID()));
+            return null;
+        }
+        return "Resign aborted.";
+    }
+
     // gracefully handles a non integer input from user.
     private int gameNumToGameID(String stringNum) throws ResponseException {
         int gameNum;
